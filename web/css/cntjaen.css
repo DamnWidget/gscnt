@@ -1,0 +1,37 @@
+/*
+ *  Hoja de estilo
+ */
+.gscnt-header { background-image: url(../media/header_bg.png); padding-left: 10px; font: 11px tahoma; -moz-user-select: none; }
+.gscnt-header img { margin: 5px; width: 306px; height: 81px; vertical-align: middle; }
+.gscnt-header-alt { float: right; padding: 29px 100px; }
+.gscnt-header-alt span { color: white; font-weight: bold; }
+.gscnt-header-title { position: relative; top: -30px; right: 100px; float: right; }
+.gscnt-header-title span { font-size: 2em; font-weight: bold; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif; }
+.gscnt-logo { background-image: url(../media/logo.png) !important; }
+
+.gscnt-escritorio .gscnt-escritorio-dd-spacer { margin-bottom:10px; }
+.gscnt-escritorio-portlet { margin-bottom:10px; }
+
+/* Clean up the look of the portlets */
+.gscnt-escritorio-portlet .gscnt-escritorio-panel-ml { padding-left:2px; }
+.gscnt-escritorio-portlet .gscnt-escritorio-panel-mr { padding-right:2px; }
+.gscnt-escritorio-portlet .gscnt-escritorio-panel-bl { padding-left:2px; }
+
+.gscnt-escritorio-portlet .gscnt-escritorio-panel-br { padding-right:2px; }
+.gscnt-escritorio-portlet .gscnt-escritorio-panel-body { background:white; }
+.gscnt-escritorio-portlet .gscnt-escritorio-panel-mc { padding-top:2px; }
+.gscnt-escritorio-portlet .gscnt-escritorio-panel-bc .gscnt-escritorio-panel-footer { padding-bottom:2px; }
+.gscnt-escritorio-portlet .gscnt-escritorio-panel-nofooter .gscnt-escritorio-panel-bc { height:2px; }
+
+/*
+ * Iconos
+ */
+.icon_desktop { background-image: url(../media/dashboard-show.png) !important; }
+.icon_calendar { background-image: url(../media/office-calendar.png) !important; }
+.icon_federacion { background-image: url(../media/federacion.png) !important; }
+.icon_afiliados { background-image: url(../media/applications-engineering.png) !important; }
+.icon_documents { background-image: url(../media/acroread.png) !important; }
+.icon_store { background-image: url(../media/server-database.png) !important; }
+.icon_conflictos { background-image: url(../media/kblogger.png) !important; }
+.icon_actividades { background-image: url(../media/tool-animator.png) !important; }
+.icon_tesoreria { background-image: url(../media/kchart.png) !important; }

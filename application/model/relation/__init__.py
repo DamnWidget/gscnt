@@ -1,0 +1,1 @@
+# Goliat will place here the generated relation models.

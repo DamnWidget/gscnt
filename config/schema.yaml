@@ -1,0 +1,216 @@
+##
+# Goliat: The Twisted and ExtJS Web Framework
+# Copyright (C) 2010 Open Phoenix IT
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+#
+#
+#-------------------------------------------------------------------------------
+#-- Database Schema definition file
+#-------------------------------------------------------------------------------
+#
+# You can use this yaml schema definition file to define your Database Schema
+# and generate your project database tables and Python models using the
+# goliat-mgr tool or another else way you will create in your application code
+#
+# The Goliat schema defintion file will follow some syntax rules, you can use
+# any valid Goliat schema keyword
+#
+# Valid schemas are those supported by Storm ORM (sqlite, mysql and postgres)
+#
+# ---- The Schema definition format ----
+# You can add only one database in your schema definition (this maybe change in
+# some later Goliat release), the schema definition will follow the syntax below
+#
+# database:
+#   _properties:
+#     uri:               'schema://user:password@hostname:port/database_name'
+#     # In case we are using MySQL as the schema backend
+#     engine:            InnoDB
+#   tables:
+#     person:
+#       id:              ~
+#       name:            { type: varchar, size: '50', required: true }
+#       surname:         { type: varchar, size: '100', required: true }
+#       age:             { type: smallint, size: '2' }
+#       _order:
+#         fieldsOrder:   [ id, name, surname, age ]
+#     # We can also use extended syntax as follow
+#     employee:
+#       id:
+#         type:          integer
+#         primaryKey:    true
+#         autoIncrement: true
+#         required:      true        
+#       company_id:      { type: integer, required: true }
+#       _order:
+#         fieldsOrder:   [ id, company_id ]
+#     # We can mix extended and reduced syntax at same table if we want as follow
+#     company:
+#       id:              { type: integer, primaryKey: true, autoIncrement: true, required: true }
+#       name:
+#         type:          varchar
+#         size:          '100'
+#         required:      true
+#       vat:             { type: varchar, size: '12', required: true }
+#       _order:
+#         fieldsOrder:   [ id, name, vat ]
+#     title:
+#       id:              ~
+#       name:            { type: varchar, size: '50', required: true }
+#       _order:
+#         fieldsOrder:   [ id, name ]
+#
+# The uri will be a valid Storm database URI
+# You can use the '~' with id attributes, Goliat will add the correct options for the 
+# selected schema for Primary Keys identificators
+# The _order and fieldsOrder data is neccesary to tell Goliat in what order will
+# push fields on database tables and the order that them will be shown on UI
+# grids and forms.  
+# _relation attribute in tables is used to define complex table relationships
+#
+# To define one2one relation we can do it as follows
+#
+# At employee table:
+# _relation:
+#   title:              { type: one2one, foreignTable: title, foreignKey: id }
+#
+# This will add a new fields in model module class with a Reference to the new relation:
+# title_id = Int()
+# title = Reference(title_id, "Title.id")
+#
+# Then we can use this code:
+# consultant = store.add(Title(u"Consultant"))
+# john = store.add(Employee(u"John Smith"))
+# john.title = consultant
+# store.flush()
+# print "%r, %r" % (john.title_id, john.title.name)
+#
+# With result:
+# 1, u'Consultant'
+#
+# To define a many2one relation we con do it as follows
+#
+# At company table:
+# _relation:
+#   employees:          { type: many2one, localKey: id, foreignTable: employee, foreignKey: id }
+#
+# This will add a new field in model module class with a Reference to the new relation:
+# employees = ReferenceSet("Company.id", "Employee.company_id")
+#
+# Then we can use this code:
+# john = store.add(Employee(u"John Smith"))
+# myInc = store.add(Company(u"My Company"))
+# myInc.employees.add(john)
+# print john.company_id
+# print john.company is myInc
+# 
+# With result:
+# 1
+# True 
+#
+# To define an auto many2many relationship we can do it as follows
+#
+# company:
+#   _config:            { modName: Company }
+#   id:                 ~
+#   name:               { type: varchar, size: '100', required: true }
+#   vat:                { type: verchar, size: '12', required: true }
+#   _relation:
+#     employee_ids:     { type: many2many, foreignTable: employee, foreignKey: id, localKey: id, keys: [ company_id, employee_id ] }
+#
+# This will create a new table called company_employee with the following syntax:
+# 'CREATE TABLE company_employee (
+#       company_id INTEGER,
+#       employee_id INTEGER ,
+#       PRIMARY KEY (company_id, employee_id)
+# );'
+#
+# Then will create a new model module class CompanyEmployee like:
+# class CompanyEmployee(Storm):
+#   __storm_table__ = "company_employee"
+#   __storm_primary__ = "company_id", "employee_id"
+#   company_id = Int(allow_none=False)
+#   employee_id = Int(allow_none=False)
+#
+# And finally add a new field in model module class Company with a ReferenceSet to the new relation:
+# employee_ids = ReferenceSet("Company.id", "CompanyEmployee.company_id", "CompanyEmployee.employee_id", "Employee.id")
+#
+# Now, we can know which employees are working in any Company with this simple code:
+# employees = [ employee.name for employee in company.employee_ids ]
+# print employees
+#
+# If we want to add a reverse relation from employee to companies we can do it in easy way modifing a bit the relation
+# definition as is shown in this example:
+# employee_ids:     { type: many2many, foreignTable: employee, foreignKey: id, localKey: id, keys: [ company_id, employee_id ], reverseId: company_ids }
+#
+# This will modify the model module class Employe with a reversed ReferenceSet to the relation:
+# company_ids = ReferenceSet("Employee.id", "CompanyEmployee.employee_id", "CompanyEmployee.company_id", "Company.id")
+#
+# Now, we can know on which companies an employeer is working with this simple code:
+# companies = [ company.name for company in employee.company_ids ]
+# print companies
+#
+# For more information visit http://goliat.open-phoenix.com
+#
+#-------------------------------------------------------------------------------
+#-- Valid Goliat schema keywords
+#-------------------------------------------------------------------------------
+#         
+# Goliat should convert Goliat Schema type keywords to schema keywords
+#
+# Types:
+#
+# Goliat Schema         SQLite              MySQL               Postgres
+# ==============================================================================
+# integer               INTEGER             INT                 INT
+# smallint              INTEGER             SMALLINT            SMALLINT
+# longint               INTEGER             BIGINT              BIGINT
+# serial                INTEGER             INT                 SERIAL
+# bigserial             INTEGER             BIGINT              BIGSERIAL
+# boolean               INTEGER             TINYINT(1)          BOOLEAN
+# bool                  INTEGER             TINYINT(1)          BOOLEAN
+# real                  REAL                REAL                REAL
+# float                 FLOAT               FLOAT               FLOAT
+# double                DOUBLE              DOUBLE PRECISION    DOUBLE PRECISION
+# decimal               TEXT                DECIMAL             DECIMAL
+# unicode               TEXT                TEXT                TEXT
+# varchar               VARCHAR             VARCHAR             VARCHAR
+# longvarchar           TEXT                TEXT                TEXT
+# rawstr                BLOB                VARBINARY           BYTEA
+# any                   BLOB                BYNARY              BYTEA
+# timestamp             TEXT                TIMESTAMP           TIMESTAMP
+# date                  TEXT                DATE                DATE
+# time                  TEXT                TIME                TIME
+# timedelta             TEXT                TEXT                INTERVAL
+# list                  TEXT                TEXT                ARRAY
+#
+
+database:
+    _properties:
+        uri:                    'postgres://cntjaen:7neajtnc7@localhost:5432/gscnt'
+    tables:
+        user_profile:
+            id:                 ~
+            user_id:            { type: integer, required: true }
+            nia:                { type: integer, required: true }
+            validation_key:     { type: varchar }
+            validated:          { type: boolean, default: false }
+            _relation:
+                user:           { type: one2one, foreignTable: goliat_user, foreignKey: id, view: user }
+            _order:
+                fieldsOrder:    [ id, user_id, nia, validation_key, validated ]
+        
+               
