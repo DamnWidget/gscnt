@@ -170,19 +170,14 @@ GsCNT.workspace = function() {
                 
                 lw.items.items[0].add({
                     xtype   : 'button',
-                    itemId  : 'certBtn',
-                    disabled: true,
+                    itemId  : 'certBtn',                    
                     style   : 'margin: 16px 0 0 8px;',
                     iconCls : 'icon_cert',
                     width   : 70,                    
                     text    : 'Acceder con Certificado Digital',
-                    handler : this.Sign,
+                    handler : this.onSign,
                     scope   : this.scope || this
                 });
-                
-                lw.add({
-                    xtype   : 'cryptoapplet'
-                });  
                 
                 loginWindow = lw;         
                          
@@ -254,53 +249,12 @@ GsCNT.workspace = function() {
             return session;
         },
         
-        Sign : function() {
-            var texto = "Q2FkZW5hIGRlIHZlcmlmaWNhY2lvbgo=";            
-            var cp= document.getElementById("CryptoApplet");            
-            cp.setSignatureOutputFormat("CMS");
-            cp.setInputDataEncoding("BASE64");
-            cp.setOutputDataEncoding("BASE64");
-            cp.setLanguage("ES_es");
-            cp.signDataParamToFunc(texto,"onSignOk");
-        },
-
-        onInitOk : function() {
-            certBtn = loginWindow.items.items[0].items.items[3];
-            certBtn.enable();
-        },
+        onSign : function() {            
+           document.location.href = 'https://'+document.location.hostname+':8443/sessionmanager/check_certificate';
+        }        
         
-        onSignOk : function(res) {
-            Goliat.data.JsonRequest({
-                method  : 'GET',
-                url     : '/sessionmanager/sign',
-                data    : { sign : res },
-                scope   : this
-            }, this.onSignVerified);
-        },
-        
-        onSignVerified: function(data) {
-            if (!data.success) {
-                Goliat.Msg.error(data.error, this);
-            }
-            else {
-                var form = loginWindow.get(0);
-                form.getForm().setValues({
-                    username: data.data.username,
-                    password: data.data.password,
-                });
-                this.onLogin();
-            }
-        }
     }
 }();
 
 // Main application entry point
 Ext.onReady(GsCNT.workspace.init, GsCNT.workspace)
-
-function onInitOk() {
-    GsCNT.workspace.onInitOk();
-}
-
-function onSignOk(res) {
-    GsCNT.workspace.onSignOk(res);
-}

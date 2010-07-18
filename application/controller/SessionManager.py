@@ -100,21 +100,82 @@ class SessionManager(gresource.GResource):
 
         return sess_data
 
+    def check_certificate(self, request, **kwargs):
+        """
+        Checks a client certificate.
+        """
+
+        session=request.getSession()
+        if session.is_authed():
+            request.redirect('https://'+request.getRequestHostname()+':8080')
+
+        cert=request.transport.getPeerCertificate()
+        if not cert:
+            request.write('<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" class=" ext-strict">'+\
+                          '<head>\n'+\
+                          '    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">\n'+\
+                          '    <title>Error {0}</title>'.format(http.NO_CERT_REQUEST))
+            request.write('</head>')
+            request.write('<body>')
+            request.write('    <h1>Error {0}</h1>'.format(http.NO_CERT_REQUEST))
+            request.write('    <p>Su cliente web no ha emitido ningún certificado.</p>')
+            request.write('    <a style="margin: 10px auto;" href="https://{0}:8080/">Volver</a>'.format(request.getRequestHostname()))
+            request.write('</body>')
+            request.write('</html>')
+            request.finish()
+        else:
+            res=self._process_certificate(cert)
+            if res['success']:
+                if not session.is_authed():
+                    session.authenticate()
+                from goliat.session.usermanager import UserManager
+                if not UserManager().exists(res['user'].id):
+                    user=UserManager().get(res['user'].id, session)
+                    user.set_last_login()
+                    user.save()
+
+                request.redirect('https://'+request.getRequestHostname()+':8080/')
+                request.finish()
+            else:
+                request.write('<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" class=" ext-strict">'+\
+                          '<head>\n'+\
+                          '    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">\n'+\
+                          '    <title>Error {0}</title>'.format(http.NO_CERT_REQUEST))
+                request.write('</head>')
+                request.write('<body>')
+                request.write('    <h1>Error {0}</h1>'.format(http.NO_CERT_REQUEST))
+                request.write('    <p>{0}.</p>'.format(res['message']))
+                request.write('    <a style="margin: 10px auto;" href="https://{0}:8080/">Volver</a>'.format(request.getRequestHostname()))
+                request.write('</body>')
+                request.write('</html>')
+                request.finish()
+
+
     def sign(self, request, **kwargs):
         """
         Signs with User's Digital Certificates.
         """
-        sign=kwargs.get('sign', None)
-        if not sign:
-            return json.dumps({ 'success' : False, 'error' : 'Su navegador no ha enviado ninguna cadena de firma. Revise su soporte Java'})
-        os.chdir('signVerify')
-        fd=file('./tmp/pkcs7.pem', 'wb')
-        fd.write(sign[0])
-        fd.close()
-        output=utils.getProcessOutput('/usr/bin/java', ['-jar', './dist/signVerify.jar', '-f', './tmp/pkcs7.pem'])
-        output.addCallback(self._signVerify, request).addErrback(self._signFail, request)
-        os.chdir('../')
-        return server.NOT_DONE_YET
+
+        session=request.getSession()
+        if session.is_authed():
+            return self.check_session(request)
+
+        output=None
+        cert=request.transport.getPeerCertificate()
+        if not cert:
+            output={ 'success' : False, 'message' : 'Su cliente web no ha emitido ningún certificado', 'number' : http.NO_CERT_REQUEST }
+        else:
+            output=self._process_certificate(cert)
+
+        if kwargs.get('callback', None):
+            cb=kwargs.get('callback')[0]
+            request.setHeader('Content-Type', 'text/javascript')
+            request.write(cb+'('+json.dumps(output)+');')
+        else:
+            request.setHeader('Content-Type', 'application/x-json')
+            request.write(json.dumps(output))
+
+        request.finish()
 
     def check_session(self, request, **kwargs):
         """
@@ -136,32 +197,21 @@ class SessionManager(gresource.GResource):
         request.getSession().expire()
         return json.dumps({'success' : True, 'msg' : 'Done.'})
 
-    def _signFail(self, error, request):
-        print error
-        request.write(json.dumps({'success' : False, 'error' : 'La firma no es válida.'}))
-        request.finish()
+    def _process_certificate(self, cert):
+        """
+        Process an Client Certificate.
+        """
+        try:
+            nia=cert.get_subject().get_components()[4][1].split('NIA')[1].lstrip()
+        except:
+            return {'success' : False, 'message' : 'El certificado no es válido.'}
 
+        store=Store(Database().get_database())
+        result=store.find(UserProfile, UserProfile.nia==int(nia)).one()
+        if not result:
+            return {'success' : False, 'message' : 'Este certificado digital no tiene un usuario asociado.'}
+        user=store.find(UserData, UserData.id==result.user_id).one()
+        if not user:
+            return {'success' : False, 'message' : 'Este certificado digital no tiene un usuario asociado.'}
 
-    def _signVerify(self, result, request):
-        succ, data, ign=result.split('\n')
-        if succ=='true':
-            name=data.split('=')[1].split('-')[0].rstrip()
-            nia=int(data.split('NIA')[1].lstrip())
-            store=Store(Database().get_database())
-            result=store.find(UserProfile, UserProfile.nia==nia).one()
-            if not result:
-                request.write(json.dumps({'success' : False, 'error' : 'Este certificado digital no tiene un usuario asociado.'}))
-                request.finish()
-                return
-            user=store.find(UserData, UserData.id==result.user_id).one()
-            if not user:
-                request.write(json.dumps({'success' : False, 'error' : 'Este certificado digital no tiene un usuario asociado.'}))
-                request.finish()
-                return
-            request.write(json.dumps({'success' : True, 'data' : {'username' : user.username, 'password' : user.password }}))
-            request.finish()
-            return
-        else:
-            request.write(json.dumps({'success' : False, 'error' : 'La firma no es válida.'}))
-            request.finish()
-            return
+        return {'success' : True, 'user' : user }

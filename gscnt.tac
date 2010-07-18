@@ -13,9 +13,7 @@ from goliat.database import Database
 from goliat.session import GoliatSession, SessionManager
 from goliat.auth import (DBCredentialsChecker, SessionCookieCredentialsChecker)
 from goliat.auth.realm import GoliatRealm
-
-from SSLFactory import ServerContextFactory, ClientSSLAuthContextFactory
-
+from goliat.auth import ssl
 
 application=service.Application('GsCNT')
 
@@ -86,13 +84,26 @@ goliat_app_site=server.Site(root)
 # Use GoliatSession as the session factory
 goliat_app_site.sessionFactory=GoliatSession
 
-sslFactory=ServerContextFactory()
-#sslFactory=ClientSSLAuthContextFactory()
-cfg['sslFactory']=sslFactory
+sslFactory=ssl.ContextFactory('sslcert/private/cakey.rsa', 'sslcert/cacert.pem')
 
 httpserver=internet.SSLServer(cfg['Project']['app_port'], goliat_app_site, sslFactory)
 httpserver.setName('GsCNT Application')
 httpserver.setServiceParent(application)
+
+# SSL Authentication Port
+sslAuthFactory=ssl.ContextClientAuthFactory(
+    'sslcert/private/cakey.rsa',
+    'sslcert/cacert.pem',
+    'sslcert/cacert.pem'
+)
+sslauthserver=internet.SSLServer(8443, goliat_app_site, sslAuthFactory)
+sslauthserver.setName('GsCNT SSL Client Authentication')
+sslauthserver.setServiceParent(application)
+
+# Para el puto Chromium
+httpserver2=internet.TCPServer(4080, goliat_app_site)
+httpserver2.setName('GsCNT Application Chrome')
+httpserver2.setServiceParent(application)
 
 # You can add as many services as you need using the MultiService interface
 # More info available over http://goliat.open-phoenix.com/wiki
