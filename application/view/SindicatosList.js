@@ -22,31 +22,34 @@
 
 Ext.ns('GsCNT.view');
 
-GsCNT.view.Portlet = Ext.extend(Ext.Panel, {
-    anchor : '100%',
-    frame : true,
-    collapsible : true,
-    draggable : true,
-    cls : 'gscnt-escritorio-portlet'
+GsCNT.view.SindicatosList = Ext.extend(Goliat.base.ListPanel, {
+    url     : 'sindicatosmanager/get_list',
+    buildListView : function() {
+        return {
+            xtype       : 'listview',
+            singleSelect: true,
+            store       : this.buildStore(),
+            columns     : [
+                {
+                    header      : 'Nombre del Sindicato',
+                    dataIndex   : 'name'
+                }
+            ]
+        };
+    },
+    
+    buildStore : function() {
+        return {
+            xtype       : 'jsonstore',
+            autoLoad    : this.autoLoadStore,
+            url         : this.url,
+            fields      : ['id', 'name', 'description', 'comite_id'],
+            sortInfo    : {
+                field       : 'name',
+                dir         : 'ASC'
+            }
+        };
+    }
 });
 
-Ext.reg('portlet', GsCNT.view.Portlet);
-
-GsCNT.view.Portlet.Tools = [
-    {
-        id:'gear',
-        handler: function(e, target, panel){
-            if (!panel.toolsButton_onClick) {
-                Ext.Msg.alert('Message', 'No existe configuración para este portlet.');
-            } else {
-                panel.toolsButton_onClick();
-            }
-        }
-    },
-    {
-        id:'close',
-        handler: function(e, target, panel){
-            panel.ownerCt.remove(panel, true);
-        }
-    }
-];
+Ext.reg('sindicatoslist', GsCNT.view.SindicatosList);

@@ -206,11 +206,58 @@ database:
             id:                 ~
             user_id:            { type: integer, required: true }
             nia:                { type: integer, required: true }
+            comite:             { type: boolean, default: false }
+            title:              { type: varchar, size: 128 }
             validation_key:     { type: varchar }
-            validated:          { type: boolean, default: false }
+            validated:          { type: boolean, default: false }            
             _relation:
                 user:           { type: one2one, foreignTable: goliat_user, foreignKey: id, view: user }
+                address:        { type: many2one, localKey: id, foreignTable: address, foreignKey: id }
             _order:
-                fieldsOrder:    [ id, user_id, nia, validation_key, validated ]
+                fieldsOrder:    [ id, user_id, nia, comite, title, validation_key, validated ]
         
+        address:
+            id:                 ~
+            street:             { type: varchar, size: 128 }
+            phone:              { type: varchar, size: 11 }
+            work_phone:         { type: varchar, size: 11 }
+            mobile:             { type: varchar, size: 11 }
+            state:              { type: varchar, size: 128 }
+            city:               { type: varchar, size: 128 }
+            zip:                { type: varchar, size: 5 }
+            email:              { type: varchar, size: 128 }
+            _order:
+                fieldsOrder:    [ id, street, state, city, zip, phone, work_phone, mobile, email ]                
+                
+        users_group:
+            id:                 ~
+            name:               { type: varchar, size: 128, required: true }
+            description:        { type: varchar }
+            active:             { type: boolean, default: true }
+            _relation:
+                user_ids:       { type: many2many, foreignTable: goliat_user, foreignKey: id, localKey: id, keys: [ users_group_id, goliat_user_id ] }
+            _order:
+                fieldsOrder:    [ id, name, description, active, user_ids ]
+        
+        sindicato:
+            id:                 ~
+            name:               { type: varchar, size: 128, required: true }
+            description:        { type: varchar }
+            comite_id:          { type: integer }
+            _relation:
+                address:        { type: many2one, localKey: id, foreignTable: address, foreignKey: id }
+                user_ids:       { type: many2many, foreignTable: goliat_user, foreignKey: id, localKey: id, keys: [ sindicato_id, goliat_user_id ] }
+                comite:         { type: one2one, foreignTable: users_group, foreignKey: id, view: comite }
+            _order:
+                fieldsOrder:    [ id, name, description, address, user_ids, comite_id ]    
+        
+        federacion:
+            id:                 ~
+            name:               { type: varchar, required: true }
+            comite_id:          { type: integer }                                     
+            _relation:
+                address:        { type: many2one, localKey: id, foreignTable: address, foreignKey: id }
+                comite:         { type: one2one, foreignTable: users_group, foreignKey: id, view: comite }
+            _order:
+                fieldsOrder:    [ id, name, phone, address, comite_id ]
                

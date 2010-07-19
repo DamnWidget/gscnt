@@ -22,31 +22,10 @@
 
 Ext.ns('GsCNT.view');
 
-GsCNT.view.Portlet = Ext.extend(Ext.Panel, {
-    anchor : '100%',
-    frame : true,
-    collapsible : true,
-    draggable : true,
-    cls : 'gscnt-escritorio-portlet'
+GsCNT.view.DocumentsManager = Ext.extend(Ext.Panel, {
+    initComponent : function() {
+        GsCNT.view.DocumentsManager.superclass.initComponent.call(this);
+    }
 });
 
-Ext.reg('portlet', GsCNT.view.Portlet);
-
-GsCNT.view.Portlet.Tools = [
-    {
-        id:'gear',
-        handler: function(e, target, panel){
-            if (!panel.toolsButton_onClick) {
-                Ext.Msg.alert('Message', 'No existe configuración para este portlet.');
-            } else {
-                panel.toolsButton_onClick();
-            }
-        }
-    },
-    {
-        id:'close',
-        handler: function(e, target, panel){
-            panel.ownerCt.remove(panel, true);
-        }
-    }
-];
+Ext.reg('documentsmanager', GsCNT.view.DocumentsManager);

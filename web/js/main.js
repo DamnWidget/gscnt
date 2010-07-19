@@ -31,7 +31,7 @@ var _version = "0.1b";
  * @singleton
  */
 GsCNT.workspace = function() {
-    var viewport, mainPanel, loginWindow, centerPanel, session;
+    var viewport, mainPanel, loginWindow, centerPanel, session, aboutwindow;
      
     return {
         window: null,
@@ -80,7 +80,7 @@ GsCNT.workspace = function() {
                                     columnWidth : .30,
                                     items       : [
                                         { title: 'Another Panel 1', tools: GsCNT.view.Portlet.Tools, html: 'Perico palotes' }
-                                    ]
+                                    ],                                    
                                 },
                                 {
                                     columnWidth : .70,
@@ -92,20 +92,20 @@ GsCNT.workspace = function() {
                             ]                                                    
                         }                        
                     },
-                    { xtype : 'panel' },
-                    { xtype : 'panel' },
-                    { xtype : 'panel' },
-                    { xtype : 'panel' },
-                    { xtype : 'panel' },
-                    { xtype : 'panel' },
-                    { xtype : 'panel' }
+                    { xtype : 'federacionmanager' },
+                    { xtype : 'calendarmanager' },
+                    { xtype : 'documentsmanager' },
+                    { xtype : 'storemanager' },
+                    { xtype : 'conflictosmanager' },
+                    { xtype : 'actividadesmanager' },
+                    { xtype : 'tesoreriamanager' }
                 ],
                 tbar            : [
-                    { text: 'Escritorio', iconCls: 'icon_desktop', toggleGroup: 'navGrp', itemType: 'dashboard', enableToggle: true, pressed: true, scope: this, handler: this.onSwitchPanel },
+                    { text: 'Escritorio', iconCls: 'icon_desktop', toggleGroup: 'navGrp', itemType: 'escritorio', enableToggle: true, pressed: true, scope: this, handler: this.onSwitchPanel },
                     '-',
                     { text: 'Federación Local', iconCls: 'icon_federacion', itemType: 'federacionmanager', toggleGroup: 'navGrp', enableToggle: true, scope: this, handler: this.onSwitchPanel },
                     '-',
-                    { text: 'Calendario', iconCls      : 'icon_calendar', itemType: 'calendarmanager', toggleGroup: 'navGrp', enableToggle: true, scope: this, handler: this.onSwitchPanel },
+                    { text: 'Calendario', iconCls: 'icon_calendar', itemType: 'calendarmanager', toggleGroup: 'navGrp', enableToggle: true, scope: this, handler: this.onSwitchPanel },
                     '-',
                     { text: 'Documentos', iconCls: 'icon_documents', itemType: 'documentsmanager', toggleGroup: 'navGrp', enableToggle: true, scope: this, handler: this.onSwitchPanel },
                     '-',
@@ -117,13 +117,21 @@ GsCNT.workspace = function() {
                     '-',
                     { text: 'Tesorería', iconCls: 'icon_tesoreria', itemType: 'tesoreriamanager', toggleGroup: 'navGrp', enableToggle: true, scope: this, handler: this.onSwitchPanel },
                     '->',
+                    { text: 'Ayuda', iconCls: 'icon_help', scope: this, handler: function() { aboutwindow.show(); } },
+                    '-',
                     { text: 'Salir', iconCls: 'icon_logout', scope: this, handler: this.onLogout }
                 ],
                 bbar        : [
                     {
                         xtype   : 'tbtext',
                         itemId  : 'userText',
-                        text    : 'Usuario Conectado : <b>'+Ext.util.Format.capitalize(session.name)+'</b>'
+                        text    : 'Usuario Conectado : <b>'+session.name+'</b>'
+                    },
+                    '-',
+                    {
+                        xtype   : 'tbtext',
+                        itemId  : 'federacionText',
+                        text    : ''
                     },
                     '->',
                     {
@@ -156,6 +164,39 @@ GsCNT.workspace = function() {
             header = { xtype : 'gscnt_header_panel' };
             topPanel.add(header);
             topPanel.doLayout();
+        },
+        
+        buildAboutDialog: function() {
+            aboutwindow = new Ext.Window({
+                iconCls: "icon_help",
+                title: 'Acerca de GsCNT v' + _version,
+                layout: 'fit',
+                width: 500,
+                height: 300,
+                resizable: false,
+                closeAction: 'hide',
+                modal: true,
+                plain: true,
+                items: new Ext.TabPanel({
+                    activeTab: 0,
+                    enableTabScroll: true,
+                    autoScroll: true,
+                    style: "padding: 8px 8px 8px 0;",
+                    border: false,
+                    items: [
+                        { title: 'Acerca de', autoLoad: 'doc/about.html', enableTabScroll: true, autoScroll: true, bodyStyle: "background: #ffffff url(media/gatonegro_mini.png) no-repeat bottom right;" },
+                        { title: 'Autores', autoLoad: 'doc/authors.html', enableTabScroll: true, autoScroll: true, bodyStyle: "background: #ffffff url(media/gatonegro_mini.png) no-repeat bottom right;" },
+                        { title: 'Licencia', autoLoad: 'doc/gpl-2.0.html', enableTabScroll: true, autoScroll: true, bodyStyle: "background: #ffffff url(media/gatonegro_mini.png) no-repeat bottom right;" }
+                    ]
+                }),
+                buttons: [{
+                    text: 'Cerrar',
+                    iconCls: "icon_close",
+                    handler: function() {
+                        aboutwindow.hide();
+                    }
+                }]
+            })
         },
         
         checkSession : function() {  
@@ -234,7 +275,8 @@ GsCNT.workspace = function() {
         },
         
         buildInterface : function() {            
-            this.buildViewPort();            
+            this.buildViewPort();
+            this.buildAboutDialog();            
         },
 
         destroy: function() {
@@ -251,6 +293,11 @@ GsCNT.workspace = function() {
         
         onSign : function() {            
            document.location.href = 'https://'+document.location.hostname+':8443/sessionmanager/check_certificate';
+        },
+        
+        FbarUpdate : function(ctx, text) {
+            bbar = centerPanel.getBottomToolbar();            
+            bbar.getComponent(ctx).setText(text);
         }        
         
     }
