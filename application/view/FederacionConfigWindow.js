@@ -35,42 +35,92 @@ GsCNT.view.FederacionConfigWindow = Ext.extend(Ext.Window, {
     initComponent : function() {
         this.title = 'Configuración de la Federación Local';
         this.iconCls = 'icon_federacion';
-        this.items = this.buildForm();
-        this.buttons = this.buildButtons();
+        this.items = this.buildComiteGrid();
+        this.buttons = this.buildButtons();        
         GsCNT.view.FederacionConfigWindow.superclass.initComponent.call(this);
+        
+        this.addEvents(
+            'editsecretario',
+            'newsecretario',
+            'removesecretario'            
+        );
+        this.getComponent('federacionGrid').load({});  
     },
     
-    buildForm : function() {
+    buildComiteGrid : function() {        
+        var tbar = [
+            '<b>Secretari@s</b>',
+            '->',
+            {
+                text    : 'Nuev@ Secretari@',
+                iconCls : 'icon_user',
+                scope   : this,
+                handler : this.onNewSecretario
+            },
+            '-',
+            {
+                text    : 'Eliminar Secretari@',
+                iconCls : 'icon_cancel',
+                scope   : this,
+                handler : this.onRemoveSecretario
+            }
+        ];
+        
         return {
-            xtype   : 'federacionform',
-            border  : false,
-            itemId  : 'federacionForm',
-            tbar    : null
-        }
+            xtype       : 'federaciongridpanel',
+            itemId      : 'federacionGrid',
+            flex        : 1,
+            loadMask    : true,
+            tbar        : tbar,            
+            listeners   : {
+                scope       : this,
+                rowdblclcik : this.onGridRowDblClick
+            }
+        };
     },
     
     buildButtons : function() {
-        return [
-            {
-                text    : 'Cancelar',
-                iconCls : 'icon_cancel',
-                scope   : this,
-                handler : this.cancelButton_onClick
-            },
+        return [            
             {
                 text    : 'Guardar',
                 iconCls : 'icon_accept',
                 scope   : this,
                 handler : this.saveButton_onClick
+            },
+            {
+                text    : 'Cerrar',
+                iconCls : 'icon_cancel',
+                scope   : this,
+                handler : this.cancelButton_onClick
             }
         ];
     },
     
     cancelButton_onClick : function() {
-        this.close();
+        Goliat.Msg.confirm('¿Está seguro de que quiere cerrar el formulario?<br />Cualquier cambio será irrecuperable una vez cerrado si no ha guardado previamente.', this, function(btn) {
+            if (btn == 'yes') this.close();
+        });         
     },
     
     saveButton_onClick : function() {
+            
+    },
+    
+    onGridRowDblClick : function(grid, rowIndex) {
+        var record = grid.store.getAt(rowIndex);
+
+        this.fireEvent('editsecretario', this, grid, record);
+    },
+    
+    onNewSecretario : function() {
+        this.fireEvent('newsecretario', this);
+    },
+    
+    onRemoveSecretario : function() {
         
+    },
+    
+    getGrid : function() {
+        return this.getComponent('federacionGrid');
     }
 });

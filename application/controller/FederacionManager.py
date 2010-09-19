@@ -36,6 +36,8 @@ from goliat.webserver import gresource
 from goliat.session.user import IUser, UserData
 from goliat import http
 from application.model.Federacion import Federacion
+from application.model.UsersGroup import UsersGroup
+from application.model.Sindicato import Sindicato
 
 class FederacionManager(gresource.GResource):
     """FederacionManager class:"""
@@ -68,11 +70,29 @@ class FederacionManager(gresource.GResource):
         return server.NOT_DONE_YET
 
     def _read(self, result, request):
+
+        def cb_read_group(group, data):
+            data['success']=True
+            data['group']={ 'name' : group.name, 'id' : group.id, 'desc' : group.description, 'active' : group.active }
+            self.sendback(request, data)
+
         if len(result) is 0:
             self.sendback(request, {'success' : False, 'message' : 'No hay datos de la Federación Local'})
         else:
-            result[0]['success']=True
-            self.sendback(request, result[0])
+            UsersGroup.store.get(UsersGroup, result[0]['comite_id']).addCallback(cb_read_group, result[0])
+
+    def save(self, request, **kwargs):
+        """Save federacion data."""
+
+        if not kwargs.get('group_id', None) or int(kwargs.get('group_id')[0])==0:
+            Federacion.create(kwargs).addCallback(self._save, request)
+        else:
+            Federacion.update(kwargs).addCallback(self._save, request)
+
+        return server.NOT_DONE_YET
+
+    def _save(self, result, request):
+        self.sendback(request, result)
 
     def get_comite(self, request, **kwargs):
         """
@@ -103,7 +123,6 @@ class FederacionManager(gresource.GResource):
     def _get_all_comites(self, request, users_group):
         """Returns all comites from user group."""
 
-        from application.model.UsersGroup import UsersGroup
         from goliat.session.user import UserProfileProxy
 
         def cb_order(users):
@@ -118,8 +137,7 @@ class FederacionManager(gresource.GResource):
                     'comite'   : uprofile.comite,
                     'title'    : uprofile.title
                 })
-            self.sendback(request, {'success' : True, 'people' :  rusers, 'group' :
-                { 'name' : users_group.name, 'id' : users_group.id, 'desc' : users_group.description }})
+            self.sendback(request, {'success' : True, 'people' :  rusers })
 
         def cb_read(results):
             results.user_ids.all().addCallback(cb_order)
@@ -127,11 +145,24 @@ class FederacionManager(gresource.GResource):
         ugroup=UsersGroup()
         ugroup.store.get(UsersGroup, users_group.id).addCallback(cb_read)
 
+    def check_sindicatos(self, request, **kwargs):
+        """Check if this federacion has sindicatos"""
+
+        def cb_read(sindicatos):
+            if not len(sindicatos):
+                self.sendback(request, {'success' : False, 'message' : 'No hay sindicatos federados a la Federación Local'})
+            else:
+                self.sendback(request, { 'success' : True, 'sindicatos' : sindicatos })
+
+        Sindicato.view().addCallback(cb_read)
+
+        return server.NOT_DONE_YET
+
     def get_register_path(self):
         """Returns the module resource registration path."""
         return "federacionmanager"
 
-    def get_schema_model(self):
+    def get_schema_model(sel, request, **kwargs):
         """Return the schema model Federacion architecture."""
         model_schema, model_view=Federacion.get_model_info()
         if model_schema==None:

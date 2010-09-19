@@ -65,63 +65,52 @@ class UsersGroupBase(Storm):
         return Model().get_model_info(UsersGroupBase)
 
     @staticmethod
-    def view(controller):
+    def view():
         """Returns a list of every row at model."""
-        return Model().view(UsersGroupBase, controller)
+        return Model().view(UsersGroupBase)
 
     @staticmethod
     def create(controller):
         """Create a new UsersGroupBase object and returns it."""
         data=controller._request.args.get('data')
         if data==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
+            controller._sendback({'success' : False, 'message' : 'No data received from UI.'})
         else:
             object=json.loads(data[0])
             result, msg=Model().isValidObject(object, UsersGroupBase)
             if not result:
-                controller._sendback({'success' : False, 'error' : msg})
+                controller._sendback({'success' : False, 'message' : msg})
                 return
 
             obj=UsersGroupBase()
             return Model().create(Model().generate_object(obj, object), UsersGroupBase, controller)
 
     @staticmethod
-    def update(controller):
+    def update(data):
         """Update an object."""
-        data=controller._request.args.get('data')
-        if data==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
-        else:
-            object=json.loads(data[0])
-            result, msg=Model().is_valid_object(object, UsersGroupBase)
-            if not result:
-                controller._sendback({'success' : False, 'error' : msg})
-                return
-
-            return Model().update(object, UsersGroupBase, controller)
+        return Model().update(UsersGroupBase, data)
 
     @staticmethod
-    def destroy(controller):
+    def destroy(id):
         """Destroy an object."""
-        id=controller._request.args.get('id')
-        if id==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
+
+        if not id:
+            return {'success' : False, 'message' : 'No data received from UI.'}
         else:
-            return Model().destroy(int(id[0]), UsersGroupBase, controller)
+            return Model().destroy(int(id[0]), UsersGroupBase)
 
     @staticmethod
-    def get(controller):
+    def get(id, ref=None):
         """Get a row."""
-        id=controller._request.args.get('id')
-        if id==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
+        if not id:
+            return {'success' : False, 'message' : 'No data received from UI.'}
         else:
-            if controller._request.args.get('ref')!=None:
-                model='{0}Base'.format(controller._request.args.get('ref')[0].capitalize())
+            if ref:
+                model='{0}Base'.format(ref.capitalize())
                 model=eval(model)
-                return Model().get(int(id[0]), model, controller)
+                return Model().get(int(id[0]), model)
             else:
-                return Model().get(int(id[0]), UsersGroupBase, controller)
+                return Model().get(int(id[0]), UsersGroupBase)
 
     @staticmethod
     def search(controller):

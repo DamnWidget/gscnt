@@ -23,8 +23,8 @@
 Ext.ns('GsCNT.view');
 
 GsCNT.view.ConflictosManager = Ext.extend(Ext.Panel, {
-    initComponent : function() {
-        GsCNT.view.ConflictosManager.superclass.initComponent.call(this);
+    initComponent : function() {        
+        GsCNT.view.ConflictosManager.superclass.initComponent.call(this);        
     }
 });
 

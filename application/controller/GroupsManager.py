@@ -36,69 +36,72 @@ from goliat.webserver import gresource
 from goliat.session.user import IUser, UserData
 from goliat import http
 from application.model.UsersGroup import UsersGroup
+from application.model.Federacion import Federacion
 
 class GroupsManager(gresource.GResource):
     """GroupsManager class:"""
-    
-    
+
+
     def __init__(self):
         """Constructor:
         
         ADD YOUR INITIALIZATION CODE HERE
         """
         gresource.GResource.__init__(self)
-    
+
     def render_GET(self, request):
         """Process GET Request."""
-        self._request = request
-        _act = request.args.get('act')
-        if _act != None and 'getSchemaModel' in _act:            
-            return self.get_schema_model()
-        elif _act != None and 'view' in _act:
-            UsersGroup.view(self)
-            return server.NOT_DONE_YET
-        elif _act != None and 'get' in _act:
-            UsersGroup.get(self)
-            return server.NOT_DONE_YET
-        else:
-            return json.dumps(
-                {'success' : False, 'error' : 'Not implemented yet.'})
-                    
-    
+
+        return json.dumps({'success' : False, 'message' : 'Not implemented yet.'})
+
+
     def render_POST(self, request):
         """Process POST Request."""
-        self._request = request
-        _act = request.args.get('act')
-        if _act != None and 'create' in _act:
-            UsersGroup.create(self)
-            return server.NOT_DONE_YET
-        elif _act != None and 'update' in _act:
-            UsersGroup.update(self)
-            return server.NOT_DONE_YET
-        elif _act != None and 'destroy' in _act:
-            UsersGroup.destroy(self)
-            return server.NOT_DONE_YET
-        else:
-            return json.dumps(
-                {'success' : False, 'error' : 'Not implemented yet.'})
-            
-    
+
+        return json.dumps({'success' : False, 'message' : 'Not implemented yet.'})
+
+    def view(self, request, **kwargs):
+        """Perform read CRUD action"""
+
+        def cb_sendback(result):
+            self.sendback(request, result)
+
+        UsersGroup.view().addCallback(cb_sendback)
+
+        return server.NOT_DONE_YET
+
+    def destroy(self, request, **kwargs):
+        """Perdorm destroy CRUD action"""
+
+        def cb_sendback(result):
+            self.sendback(request, result)
+
+        def cb_check(check):
+            if not check:
+                UsersGroup.destroy(kwargs.get('undefined')).addCallback(cb_sendback)
+            else:
+                return json.dumps({'success' : False, 'message' : 'No puede eliminar al comité de la Federación Local'})
+
+        Federacion.view().addCallback(Federacion.check_group, int(kwargs.get('undefined')[0])).addCallback(cb_check)
+
+        return server.NOT_DONE_YET
+
+
     def get_register_path(self):
         """Returns the module resource registration path."""
         return "groupsmanager"
-    
-    def get_schema_model(self): 
-        """Return the schema model UsersGroup architecture.""" 
-        model_schema, model_view = UsersGroup.get_model_info() 
-        if model_schema == None: 
+
+    def get_schema_model(self, request, **kwargs):
+        """Return the schema model UsersGroup architecture."""
+        model_schema, model_view=UsersGroup.get_model_info()
+        if model_schema==None:
             return json.dumps({
                 "success" : False,
                 "error" : "Unable to fetch a schema for model users_group"
-            })        
-                
+            })
+
         return json.dumps({
             "success" : True,
             "model" : model_schema,
             "view" : model_view
         })
-        

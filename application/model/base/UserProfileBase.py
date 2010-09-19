@@ -34,7 +34,7 @@ from storm.base import Storm
 from storm.locals import *
 from storm import Undef
 
-from goliat.database.store import Store
+#from goliat.database.store import Store
 from goliat.database.reference import Reference, ReferenceSet
 from goliat.database import Database
 from goliat.database.model import Model
@@ -52,7 +52,7 @@ class UserProfileBase(Storm):
     validated=Bool(primary=False, value=False, allow_none=True)
     user=Reference(user_id, "User.id")
 
-    store=Store(Database().get_database())
+    #store=Store(Database().get_database())
 
     def __init__(self):
         """Storm object representation of SQL table user_profile

@@ -23,7 +23,7 @@
 Ext.ns('GsCNT.view');
 
 GsCNT.view.FederacionGrid = Ext.extend(Ext.grid.GridPanel, {
-    url           : 'federacionmanager/get_comite',
+    dirty         : false,    
     viewConfig    : { forceFit : true },
     columns       : [
         {
@@ -32,25 +32,19 @@ GsCNT.view.FederacionGrid = Ext.extend(Ext.grid.GridPanel, {
             sortable  : true
         },
         {
-            header    : 'First Name',
-            dataIndex : 'firstName',
+            header    : 'NIA',
+            dataIndex : 'nia',
             sortable  : true
         },
         {
-            header    : 'Email',
-            dataIndex : 'email',
+            header    : 'Título',
+            dataIndex : 'title',
             sortable  : true
         },
         {
-            header    : 'Date Hired',
-            dataIndex : 'dateHired',
+            header    : 'Sindicato',
+            dataIndex : 'sindicato',
             sortable  : true
-        },
-        {
-            header    : 'Rate',
-            dataIndex : 'rate',
-            sortable  : true,
-            renderer  : Ext.util.Format.usMoney
         }
     ],
     
@@ -61,15 +55,26 @@ GsCNT.view.FederacionGrid = Ext.extend(Ext.grid.GridPanel, {
     
     buildStore : function() {
         return {
-            xtype    : 'jsonstore',
-            url      : this.url,
+            xtype    : 'jsonstore',            
+            id       : 'id',                        
             autoLoad : false,
+            proxy    : new Ext.data.HttpProxy({                                
+                api     : {
+                    read    : { url: 'federacionmanager/get_comite', method: 'GET' },
+                    update  : { url: 'federacionmanager/set_comite', method: 'POST' }                                        
+                }
+            }),
             fields   : [
-                'id', 'name', 'nia', 'comite', 'title'
+                'id', 'name', 'nia', 'comite', 'title', 'sindicato'
             ],
             sortInfo : {
                 field : 'name',
                 dir   : 'ASC'
+            },
+            listeners: {
+                scope       : this,
+                load        : this.onLoad,
+                exception   : this.onException                
             }
         }
     },
@@ -88,6 +93,14 @@ GsCNT.view.FederacionGrid = Ext.extend(Ext.grid.GridPanel, {
     
     getSelected : function() {
         return this.selModel.getSelections();
+    },
+    
+    onLoad : function(proxy, response) {
+        
+    },
+    
+    onException : function(proxy, type, action, options, response, args) {
+        Goliat.Msg.alert(response.raw.message, this);       
     }
 });
 

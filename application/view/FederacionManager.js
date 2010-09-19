@@ -32,8 +32,9 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
             this.buildSindicatosList(),
             this.buildSindicatoPanel()
         ];        
-        GsCNT.view.FederacionManager.superclass.initComponent.call(this);
+        GsCNT.view.FederacionManager.superclass.initComponent.call(this);        
     },
+    
     buildSindicatosList : function() {
         return {
             xtype       : 'sindicatoslist',
@@ -66,6 +67,7 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
     
     buildToolbar : function() {
         federacionBtn = '';
+        federacionComiteBtn = '';
         session = GsCNT.workspace.getSession();
         if(session.hasGroup('admin') || session.hasGroup('org')) {
             federacionBtn = {
@@ -73,13 +75,21 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
                 iconCls : 'icon_config',
                 scope   : this,
                 handler : this.onModifyFederacion
+            };            
+            federacionComiteBtn = {
+                text    : 'Comité de la Federación Local',
+                iconCls : 'icon_utilities',
+                scope   : this,
+                handler : this.onModifyFederacionComite
             };
-        } 
+        }        
+        
         return [
             '->',
             federacionBtn,
+            federacionComiteBtn,
             {
-                text    : 'Registrar nuevo Sindicato',
+                text    : 'Federar nuevo Sindicato',
                 iconCls : 'icon_register',
                 scope   : this,
                 handler : this.onNewSindicato
@@ -113,22 +123,105 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
     },
     
     onNewSindicato : function() {
+        if (!GsCNT.workspace.getSession().federacionData) {
+            Goliat.Msg.alert('No existen datos de la Federación Local, primero debe configurarla.', this);
+            return;
+        }
+        this.sw = new Ext.Window({
+            layout      : 'fit',
+            modal       : true,
+            width       : 320,
+            height      : 210,
+            resizable   : false,
+            draggable   : true,
+            center      : true,
+            closable    : false,
+            title       : 'Federar nuevo Sindicato',
+            iconCls     : 'icon_afiliados',            
+            items       : [
+                new GsCNT.view.SindicatoForm()
+            ],
+            buttons     : [            
+                {
+                    text    : 'Guardar',
+                    iconCls : 'icon_accept',
+                    scope   : this,
+                    handler : this.saveButton_onClick
+                },
+                {
+                    text    : 'Cerrar',
+                    iconCls : 'icon_cancel',
+                    scope   : this,
+                    handler : function() {
+                        if (this.sw.items.items[0].getForm().isDirty()) {
+                            Goliat.Msg.confirm('¿Desea cerrar el formulario sin guardar los cambios?', this, function(btn) {
+                                if (btn == 'yes') {
+                                    this.sw.close();
+                                }
+                                else {
+                                    return;
+                                }
+                            });
+                        }
+                        else {
+                            this.sw.close();
+                        } 
+                    }
+                }
+            ]
+        }).show();
+    },
+    
+    onModifyFederacion : function() {        
+        this.showConfigWizard();        
+    },
+    
+    onEditSecretario : function() {
         
     },
     
-    onModifyFederacion : function() {
-        new GsCNT.view.FederacionConfigWindow().show();
-        /*Goliat.data.JsonRequest({
+    onNewSecretario : function(win) {
+        Goliat.data.JsonRequest({
             method      : 'GET',
-            url         : '/federacionmanager/get_comite',
+            url         : '/federacionmanager/check_sindicatos',
             data        : {},
             scope       : this                        
-        }, this.showConfigWizard);*/
+        }, function(jsonData, options) {
+               if(jsonData.success) {
+                   console.debug(jsonData);
+               } else {
+                   Goliat.Msg.confirm('Actualmente no existen sindicatos federados a esta Federación Local.<br />¿Desea federar un nuevo sindicato ahora?', this, function(btn) {
+                       if(btn == 'yes') {
+                           this.onNewSindicato();
+                       }
+                   });
+               }
+        });
     },
     
-    /*showConfigWizard : function(jsonData, options) {
-        name = (GsCNT.workspace.getSession().federacionData.name) ? GsCNT.workspace.getSession().federacionData.name : '';
-        console.debug(jsonData);
+    onRemoveSecretario : function() {
+        
+    },
+    
+    onModifyFederacionComite : function() {
+        if (!GsCNT.workspace.getSession().federacionData) {
+            Goliat.Msg.alert('No existen datos de la Federación Local, primero debe configurarla.', this);
+        }
+        else {
+            new GsCNT.view.FederacionConfigWindow({
+                listeners   : {
+                    scope           : this,
+                    editsecretario  : this.onEditSecretario,
+                    newsecretario   : this.onNewSecretario,
+                    removesecretario: this.onRemoveSecretario 
+                }
+            }).show();
+        }                
+    },
+    
+    showConfigWizard : function() {
+        session = GsCNT.workspace.getSession();
+        name = (GsCNT.workspace.getSession().federacionData) ? GsCNT.workspace.getSession().federacionData.name : '';        
         var wizard = new Ext.ux.Wiz({
             title           : 'Asistente de Configuración de Federación Local',            
             headerConfig    : {
@@ -157,6 +250,7 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
                 }),
                 
                 new Ext.ux.Wiz.Card({
+                    id          : 'cardname',
                     itemId      : 'cardName',
                     title       : 'Introduzca el nombre de la Federación Local',
                     monitorValid: true,
@@ -172,9 +266,10 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
                                 ' Cuando haya finalizado haga click en el botón \'Siguiente\'.'
                         },
                         new Ext.form.TextField({
+                            id          : 'name',
                             itemId      : 'nameField',
                             fieldLabel  : 'Nombre',
-                            hiidenName  : 'name',
+                            hiddenName  : 'name',
                             value       : name,
                             emptyText   : 'Introduzca un nombre...',
                             blankText   : 'Debes introducir un nombre.',
@@ -185,8 +280,9 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
                 }),
                 
                 new Ext.ux.Wiz.Card({
+                    id          : 'cardgrupo',
                     itemId      : 'cardGrupo',
-                    title       : 'Configure el grupo que acojerá a los miembros del Comité',
+                    title       : 'Configure el grupo que acogerá a los miembros del Comité',
                     monitorValid: true,
                     items   : [
                         {
@@ -196,29 +292,32 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
                                 'Cuando haya acabado haga click en el botón \'Finalizar\''                                                            
                         },
                         new Ext.form.TextField({
+                            id          : 'gname',
                             itemId      : 'groupNameField',
                             fieldLabel  : 'Nombre del Grupo',
                             hiddenName  : 'group_name',
-                            value       : jsonData.group.name,
+                            value       : (session.federacionData) ? session.federacionData.group.name : '',
                             emptyText   : 'Inroduzca un nombre...',
                             blankText   : 'Debes introducir un nombre.',
                             width       : 200,                            
                             allowBlank  : false
                         }),                        
                         new Ext.form.TextArea({
+                            id          : 'gdesc',
                             itemId      : 'groupDescField',
                             fieldLabel  : 'Descripción',
                             hiddenName  : 'desc',
-                            value       : jsonData.group.desc,
+                            value       : (session.federacionData) ? session.federacionData.group.desc : '',
                             emptyText   : 'Inroduzca una descripción...',
                             blankText   : 'Debes introducir una descripción.',                            
                             anchor      : '100% 40%',                            
                             allowBlank  : false
                         }),
                         new Ext.form.Hidden({
+                            id          : 'gid',
                             itemId      : 'groupIdField',
                             hiddenName  : 'group_id',
-                            value       : jsonData.group.id
+                            value       : (session.federacionData) ? session.federacionData.group.id : 0,
                         })                        
                     ]
                 })
@@ -230,12 +329,32 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
     },
     
     stepOne : function(wiz, data) {        
-        var name = data[wiz.getComponent('cardPanel').getComponent('cardName').id].name;
-        var gname = data[wiz.getComponent('cardPanel').getComponent('cardGrupo').id].group_name;
-        var desc = data[wiz.getComponent('cardPanel').getComponent('cardGrupo').id].desc;
-        var gid = data[wiz.getComponent('cardPanel').getComponent('cardGrupo').id].group_id;   
-        console.debug(name);     
-    }*/
+        var name = data.cardname.name;
+        var gname = data.cardgrupo.gname;
+        var desc = data.cardgrupo.gdesc;
+        var gid = data.cardgrupo.gid;
+        
+        Goliat.data.JsonRequest({
+            method      : 'POST',
+            url         : '/federacionmanager/save',
+            data        : {
+                name        : name,
+                group_name  : gname,
+                group_desc  : desc,
+                group_id    : gid
+            },
+            scope       : this                        
+        }, function() {
+            Goliat.data.JsonRequest({
+                method      : 'GET',
+                url         : '/federacionmanager/read',
+                data        : {},
+                scope       : this                        
+            }, function(jsonData, options) { 
+                   this.onCheckFederacion(jsonData, options);                    
+            });             
+        });        
+    }
 });
 
 Ext.reg('federacionmanager', GsCNT.view.FederacionManager);

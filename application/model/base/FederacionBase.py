@@ -74,53 +74,43 @@ class FederacionBase(Storm):
         """Create a new FederacionBase object and returns it."""
         data=controller._request.args.get('data')
         if data==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
+            controller._sendback({'success' : False, 'message' : 'No data received from UI.'})
         else:
             object=json.loads(data[0])
             result, msg=Model().isValidObject(object, FederacionBase)
             if not result:
-                controller._sendback({'success' : False, 'error' : msg})
+                controller._sendback({'success' : False, 'message' : msg})
                 return
 
             obj=FederacionBase()
             return Model().create(Model().generate_object(obj, object), FederacionBase, controller)
 
     @staticmethod
-    def update(controller):
+    def update(data):
         """Update an object."""
-        data=controller._request.args.get('data')
-        if data==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
-        else:
-            object=json.loads(data[0])
-            result, msg=Model().is_valid_object(object, FederacionBase)
-            if not result:
-                controller._sendback({'success' : False, 'error' : msg})
-                return
-
-            return Model().update(object, FederacionBase, controller)
+        return Model().update(FederacionBase, data)
 
     @staticmethod
-    def destroy(controller):
+    def destroy(id):
         """Destroy an object."""
-        id=controller._request.args.get('id')
-        if id==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
+
+        if not id:
+            return {'success' : False, 'message' : 'No data received from UI.'}
         else:
-            return Model().destroy(int(id[0]), FederacionBase, controller)
+            return Model().destroy(int(id[0]), FederacionBase)
 
     @staticmethod
-    def get(id=None, ref=None):
+    def get(id, ref=None):
         """Get a row."""
         if not id:
-            return {'success' : False, 'error' : 'No data received from UI.'}
+            return {'success' : False, 'message' : 'No data received from UI.'}
         else:
             if ref:
                 model='{0}Base'.format(ref.capitalize())
                 model=eval(model)
-                return Model().get(int(id), model)
+                return Model().get(int(id[0]), model)
             else:
-                return Model().get(int(id), FederacionBase)
+                return Model().get(int(id[0]), FederacionBase)
 
     @staticmethod
     def search(controller):
