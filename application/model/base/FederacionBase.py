@@ -38,6 +38,7 @@ from goliat.database.store import Store
 from goliat.database.reference import Reference, ReferenceSet
 from goliat.database import Database
 from goliat.database.model import Model
+from twisted.internet import defer
 from application.model.base.UsersGroupBase import UsersGroupBase
 from application.model.base.AddressBase import AddressBase
 
@@ -70,24 +71,26 @@ class FederacionBase(Storm):
         return Model().view(FederacionBase)
 
     @staticmethod
-    def create(controller):
+    def create(data):
         """Create a new FederacionBase object and returns it."""
-        data=controller._request.args.get('data')
-        if data==None:
-            controller._sendback({'success' : False, 'message' : 'No data received from UI.'})
-        else:
-            object=json.loads(data[0])
-            result, msg=Model().isValidObject(object, FederacionBase)
-            if not result:
-                controller._sendback({'success' : False, 'message' : msg})
-                return
 
-            obj=FederacionBase()
-            return Model().create(Model().generate_object(obj, object), FederacionBase, controller)
+        if not data:
+            return defer.succeed({'success' : False, 'error' : 'No data received from UI.'})
+
+        object=data
+        result, msg=Model().is_valid_object(object, FederacionBase)
+        if not result:
+            return defer.succeed({'success' : False, 'message' : msg})
+        obj=FederacionBase()
+        return Model().create(Model().generate_object(obj, object), FederacionBase)
 
     @staticmethod
     def update(data):
         """Update an object."""
+
+        if not data:
+            return defer.succeed({'success' : False, 'error' : 'No data received from UI.'})
+
         return Model().update(FederacionBase, data)
 
     @staticmethod
@@ -95,7 +98,7 @@ class FederacionBase(Storm):
         """Destroy an object."""
 
         if not id:
-            return {'success' : False, 'message' : 'No data received from UI.'}
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
         else:
             return Model().destroy(int(id[0]), FederacionBase)
 
@@ -103,7 +106,7 @@ class FederacionBase(Storm):
     def get(id, ref=None):
         """Get a row."""
         if not id:
-            return {'success' : False, 'message' : 'No data received from UI.'}
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
         else:
             if ref:
                 model='{0}Base'.format(ref.capitalize())

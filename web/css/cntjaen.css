@@ -3,14 +3,21 @@
  */
 .gscnt-header { background-image: url(../media/header_bg.png); padding-left: 10px; font: 11px tahoma; -moz-user-select: none; }
 .gscnt-header img { margin: 5px; width: 306px; height: 81px; vertical-align: middle; }
-.gscnt-header-alt { float: right; padding: 29px 100px; }
-.gscnt-header-alt span { color: white; font-weight: bold; }
-.gscnt-header-title { position: relative; top: -30px; right: 100px; float: right; }
-.gscnt-header-title span { font-size: 2em; font-weight: bold; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif; }
+.gscnt-header-container { position: absolute; top: 0; right: 30px; }
+.gscnt-header-alt { margin: 6px 0 0 }
+.gscnt-header-alt span { color: rgba(0, 0, 0, 0.6); font-weight: bold; text-shadow: 0 1px 0 rgba(230, 230, 230, 0.4), 0 -1px 0 rgba(0, 0, 0, 0.8); }
+.gscnt-header-title { -moz-border-radius: 6px; border-radius: 6px; -moz-box-shadow: 0 -1px 1px rgba(255, 255, 255, 0.4) inset, 1px 3px 6px #000000 inset; -webkit-box-shadow: 0 -1px 1px rgba(255, 255, 255, 0.4) inset, 1px 3px 6px #000000 inset; box-shadow: 0 -1px 1px rgba(255, 255, 255, 0.4) inset, 1px 3px 6px #000000 inset; margin: 2px 0 0; width: 434px; }
+.gscnt-header-title span { font-size: 1.2em; line-height: 21px; font-weight: bold; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif; text-shadow: 0 1px 1px #686868, 0 -1px 1px #000; color: #222222; padding: 0 30px; }
+.gscnt-header-title p { float: right; color: #222222; font-weight: bold; padding: 4px 30px 0 0; text-shadow: 0 0 6px white; }
 .gscnt-logo { background-image: url(../media/logo.png) !important; }
-
 .gscnt-escritorio .gscnt-escritorio-dd-spacer { margin-bottom:10px; }
 .gscnt-escritorio-portlet { margin-bottom:10px; }
+
+/* ---------- List View ---------- */
+div.GsCNT-SL .x-list-body dt { background: url(../media/bandera_confederal_prof_mini.png) no-repeat scroll 2px transparent; padding: 0 0 0 28px; }
+
+/* ---------- Windows ---------- */
+.GsCNT span.x-window-header-text { padding: 0 0 0 10px; }
 
 /* Clean up the look of the portlets */
 .gscnt-escritorio-portlet .gscnt-escritorio-panel-ml { padding-left:2px; }
@@ -37,3 +44,5 @@
 .icon_tesoreria { background-image: url(../media/kchart.png) !important; }
 .icon_register { background-image: url(../media/register.png) !important; }
 .icon_users_group { background-image: url(../media/users-group.png) !important; }
+.icon_bandera { background-image: url(../media/bandera_confederal_prof_mini.png) !important; }
+.icon_tag { background-image: url(../media/tag.png) !important; }

@@ -61,9 +61,14 @@ class FederacionManager(gresource.GResource):
 
         return json.dumps({'success' : False, 'error' : 'Not implemented yet.'})
 
+    def add_secretario(self, request, **kwargs):
+        """Adds a new secretario to the federacion."""
+
+        print kwargs
+
     def read(self, request, **kwargs):
         """
-        Returns a sindicatos list.
+        Returns the Federación data.
         """
 
         Federacion.view().addCallback(self._read, request)
@@ -79,7 +84,7 @@ class FederacionManager(gresource.GResource):
         if len(result) is 0:
             self.sendback(request, {'success' : False, 'message' : 'No hay datos de la Federación Local'})
         else:
-            UsersGroup.store.get(UsersGroup, result[0]['comite_id']).addCallback(cb_read_group, result[0])
+            UsersGroup.store.get(UsersGroup, result['data'][0]['comite_id']).addCallback(cb_read_group, result['data'][0])
 
     def save(self, request, **kwargs):
         """Save federacion data."""
@@ -103,6 +108,7 @@ class FederacionManager(gresource.GResource):
             self._get_all_comites(request, results)
 
         def cb_dump(results):
+            print results
             if not results:
                 self.sendback(request, {'success' : False, 'message' : 'No existen datos del Comité de la Federación Local'})
             else:
@@ -112,7 +118,7 @@ class FederacionManager(gresource.GResource):
             if len(results) is 0:
                 self.sendback(request, {'success' : False, 'message' : 'No existen datos de la Federación Local'})
             else:
-                Federacion.store.get(Federacion, results[0]['id']).addCallback(cb_dump)
+                Federacion.store.get(Federacion, results['data'][0]['id']).addCallback(cb_dump)
 
         if not kwargs.get('id', None):
             Federacion.view().addCallback(cb_read)
@@ -152,7 +158,7 @@ class FederacionManager(gresource.GResource):
             if not len(sindicatos):
                 self.sendback(request, {'success' : False, 'message' : 'No hay sindicatos federados a la Federación Local'})
             else:
-                self.sendback(request, { 'success' : True, 'sindicatos' : sindicatos })
+                self.sendback(request, sindicatos)
 
         Sindicato.view().addCallback(cb_read)
 
@@ -162,7 +168,7 @@ class FederacionManager(gresource.GResource):
         """Returns the module resource registration path."""
         return "federacionmanager"
 
-    def get_schema_model(sel, request, **kwargs):
+    def get_schema_model(self, request, **kwargs):
         """Return the schema model Federacion architecture."""
         model_schema, model_view=Federacion.get_model_info()
         if model_schema==None:

@@ -39,66 +39,62 @@ from application.model.Sindicato import Sindicato
 
 class SindicatoManager(gresource.GResource):
     """SindicatoManager class:"""
-    
-    
+
+
     def __init__(self):
         """Constructor:
         
         ADD YOUR INITIALIZATION CODE HERE
         """
         gresource.GResource.__init__(self)
-    
+
     def render_GET(self, request):
         """Process GET Request."""
-        self._request = request
-        _act = request.args.get('act')
-        if _act != None and 'getSchemaModel' in _act:            
-            return self.get_schema_model()
-        elif _act != None and 'view' in _act:
-            Sindicato.view(self)
-            return server.NOT_DONE_YET
-        elif _act != None and 'get' in _act:
-            Sindicato.get(self)
-            return server.NOT_DONE_YET
-        else:
-            return json.dumps(
-                {'success' : False, 'error' : 'Not implemented yet.'})
-                    
-    
+
+        return json.dumps({'success' : False, 'error' : 'Not implemented yet.'})
+
     def render_POST(self, request):
         """Process POST Request."""
-        self._request = request
-        _act = request.args.get('act')
-        if _act != None and 'create' in _act:
-            Sindicato.create(self)
-            return server.NOT_DONE_YET
-        elif _act != None and 'update' in _act:
-            Sindicato.update(self)
-            return server.NOT_DONE_YET
-        elif _act != None and 'destroy' in _act:
-            Sindicato.destroy(self)
-            return server.NOT_DONE_YET
+
+        return json.dumps({'success' : False, 'error' : 'Not implemented yet.'})
+
+    def save(self, request, **kwargs):
+        """Save sindicato data."""
+
+        data={
+            'name' : unicode(kwargs.get('name')[0].decode('utf8')),
+            'description' : unicode(kwargs.get('description')[0].decode('utf8'))
+        }
+        if kwargs.get('comite_id')[0]!='':
+            data['comite_id']=int(kwargs.get('comite_id'))
+        if kwargs.get('id')[0]!='':
+            data['id']=int(kwargs.get('id')[0])
+
+        if not kwargs.get('id', None) or kwargs.get('id')[0]=='':
+            Sindicato.create(data).addCallback(self._save, request)
         else:
-            return json.dumps(
-                {'success' : False, 'error' : 'Not implemented yet.'})
-            
-    
+            Sindicato.update(data).addCallback(self._save, request)
+
+        return server.NOT_DONE_YET
+
+    def _save(self, result, request):
+        self.sendback(request, {'success' : True})
+
     def get_register_path(self):
         """Returns the module resource registration path."""
         return "sindicatomanager"
-    
-    def get_schema_model(self): 
-        """Return the schema model Sindicato architecture.""" 
-        model_schema, model_view = Sindicato.get_model_info() 
-        if model_schema == None: 
+
+    def get_schema_model(self, request, **kwargs):
+        """Return the schema model Sindicato architecture."""
+        model_schema, model_view=Sindicato.get_model_info()
+        if model_schema==None:
             return json.dumps({
                 "success" : False,
                 "error" : "Unable to fetch a schema for model sindicato"
-            })        
-                
+            })
+
         return json.dumps({
             "success" : True,
             "model" : model_schema,
             "view" : model_view
         })
-        

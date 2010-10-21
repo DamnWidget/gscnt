@@ -47,7 +47,9 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
             region      : 'west',
             width       : 200,
             maxWidth    : 300,
+            minWidth    : 200,
             border      : false,
+            bodyStyle   : "background: #fff url(media/gatonegro_mini.png) no-repeat bottom right;",
             listeners   : {
                 scope       : this,
                 click       : this.sindicatosList_onClick
@@ -61,7 +63,7 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
             itemId      : 'sindicatosPanel',
             id          : 'sindicatospanel',
             region      : 'center',
-            layout      : 'fit'            
+            layout      : 'fit'                        
         };
     },
     
@@ -137,7 +139,8 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
             center      : true,
             closable    : false,
             title       : 'Federar nuevo Sindicato',
-            iconCls     : 'icon_afiliados',            
+            iconCls     : 'icon_bandera',  
+            cls         : 'GsCNT',          
             items       : [
                 new GsCNT.view.SindicatoForm()
             ],
@@ -146,7 +149,7 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
                     text    : 'Guardar',
                     iconCls : 'icon_accept',
                     scope   : this,
-                    handler : this.saveButton_onClick
+                    handler : this.sindicatoSaveButton_onClick
                 },
                 {
                     text    : 'Cerrar',
@@ -168,7 +171,10 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
                         } 
                     }
                 }
-            ]
+            ],
+            getForm : function() {
+                return this.items.items[0];
+            }
         }).show();
     },
     
@@ -181,22 +187,61 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
     },
     
     onNewSecretario : function(win) {
-        Goliat.data.JsonRequest({
-            method      : 'GET',
-            url         : '/federacionmanager/check_sindicatos',
-            data        : {},
-            scope       : this                        
-        }, function(jsonData, options) {
-               if(jsonData.success) {
-                   console.debug(jsonData);
-               } else {
-                   Goliat.Msg.confirm('Actualmente no existen sindicatos federados a esta Federación Local.<br />¿Desea federar un nuevo sindicato ahora?', this, function(btn) {
-                       if(btn == 'yes') {
-                           this.onNewSindicato();
-                       }
-                   });
-               }
-        });
+        if(this.getSindicatosList().areRecords()) {
+            this.sw = new Ext.Window({
+                layout      : 'fit',
+                modal       : true,
+                width       : 320,
+                height      : 150,
+                resizable   : false,
+                draggable   : true,
+                center      : true,
+                closable    : false,
+                title       : 'Añadir secretarie',
+                iconCls     : 'icon_user',            
+                items       : [
+                    new GsCNT.view.SecretarioForm()
+                ],
+                buttons     : [            
+                    {
+                        text    : 'Guardar',
+                        iconCls : 'icon_accept',
+                        scope   : this,
+                        handler : this.secretarioSaveButton_onClick
+                    },
+                    {
+                        text    : 'Cerrar',
+                        iconCls : 'icon_cancel',
+                        scope   : this,
+                        handler : function() {
+                            if (this.sw.items.items[0].getForm().isDirty()) {
+                                Goliat.Msg.confirm('¿Desea cerrar el formulario sin guardar los cambios?', this, function(btn) {
+                                    if (btn == 'yes') {
+                                        this.sw.close();
+                                    }
+                                    else {
+                                        return;
+                                    }
+                                });
+                            }
+                            else {
+                                this.sw.close();
+                            } 
+                        }
+                    }
+                ],
+                getForm : function() {
+                    return this.items.items[0];
+                }
+            }).show();
+        }
+        else {
+            Goliat.Msg.confirm('Actualmente no existen sindicatos federados a esta Federación Local.<br />¿Desea federar un nuevo sindicato ahora?', this, function(btn) {
+                if (btn == 'yes') {
+                    this.onNewSindicato();
+                }
+            });
+        }        
     },
     
     onRemoveSecretario : function() {
@@ -217,6 +262,55 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
                 }
             }).show();
         }                
+    },
+    
+    secretarioSaveButton_onClick : function() {
+        if(this.sw.getForm().isValid()) {
+            Ext.getBody().mask('Guardando Secretarie', 'x-mask-loading');
+            
+            f = GsCNT.workspace.getSession().federacionData;
+            this.sw.getForm().getForm().submit({
+                url     : 'federacionmanager/save_secretario',                
+                scope   : this,
+                success : function() {
+                    Ext.getBody().unmask();
+                    this.sw.close();                    
+                },
+                failure : function() {
+                    Ext.getBody().unmask();
+                    Goliat.Msg.error('Se produjo un error al intentar guardar los datos.', this);
+                }
+            });
+        } 
+        else {
+            Goliat.Msg.error('El formulario contiene errores.', this);
+        }        
+    },
+    
+    sindicatoSaveButton_onClick : function() {
+        if(this.sw.getForm().isValid()) {            
+            Ext.getBody().mask('Guardando Sindicato', 'x-mask-loading');
+            
+            this.sw.getForm().getForm().submit({
+                url     : 'sindicatomanager/save',
+                scope   : this,
+                success : this.onSindicatoSaveSuccess,
+                failure : this.onSindicatoSaveFail
+            });
+        } else {
+            Goliat.Msg.error('El formulario contiene errores.', this);
+        }        
+    },
+    
+    onSindicatoSaveSuccess : function(form, action) {        
+        Ext.getBody().unmask();
+        this.sw.close();
+        this.getSindicatosList().refreshView();
+    },
+    
+    onSindicatoSaveFail : function() {
+        Ext.getBody().unmask();                
+        Goliat.Msg.error('Se produjo un error al intentar guardar los datos del sindicato.', this);
     },
     
     showConfigWizard : function() {
@@ -354,6 +448,10 @@ GsCNT.view.FederacionManager = Ext.extend(Ext.Panel, {
                    this.onCheckFederacion(jsonData, options);                    
             });             
         });        
+    },
+    
+    getSindicatosList : function() {
+        return this.getComponent('sindicatosList');
     }
 });
 

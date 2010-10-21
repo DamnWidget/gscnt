@@ -41,10 +41,6 @@ GsCNT.view.SindicatoForm = Ext.extend(Goliat.base.FormPanel, {
         });
         
         GsCNT.view.SindicatoForm.superclass.initComponent.call(this);
-        
-        this.addEvents({
-            save    : true
-        });
     },
     
     buildFormItems : function() {
@@ -123,6 +119,7 @@ GsCNT.view.SindicatoForm = Ext.extend(Goliat.base.FormPanel, {
                 {
                     items   : {
                         xtype           : 'relation',
+                        id              : 'ignore-me',
                         url             : '/groupsmanager',
                         fieldLabel      : 'Comité',
                         hiddenName      : 'comite_id',
@@ -152,7 +149,7 @@ GsCNT.view.SindicatoForm = Ext.extend(Goliat.base.FormPanel, {
                 }
             ]
         };
-    }    
+    }
     
 });
 

@@ -23,10 +23,11 @@
 Ext.ns('GsCNT.view');
 
 GsCNT.view.SindicatosList = Ext.extend(Goliat.base.ListPanel, {
-    url     : 'sindicatosmanager/get_list',
+    url     : 'federacionmanager/check_sindicatos',    
     buildListView : function() {
         return {
             xtype       : 'listview',
+            cls         : 'GsCNT-SL',                        
             singleSelect: true,
             store       : this.buildStore(),
             columns     : [
@@ -41,14 +42,19 @@ GsCNT.view.SindicatosList = Ext.extend(Goliat.base.ListPanel, {
     buildStore : function() {
         return {
             xtype       : 'jsonstore',
-            autoLoad    : this.autoLoadStore,
+            autoLoad    : true,
             url         : this.url,
+            root        : 'data',
             fields      : ['id', 'name', 'description', 'comite_id'],
             sortInfo    : {
                 field       : 'name',
                 dir         : 'ASC'
             }
         };
+    },
+    
+    areRecords : function() {
+        return (this.getStore().getCount() > 0)
     }
 });
 

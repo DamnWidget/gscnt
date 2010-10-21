@@ -17,30 +17,27 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 ##
-# $id application/model/UserProfile.py created on 2010-10-17 23:13:40.502370 by Goliat $
+# $id application/model/Cargo.py created on 2010-10-20 00:06:24.829803 by Goliat $
 '''
-Created on 2010-10-17 23:13:40.502370
+Created on 2010-10-20 00:06:24.829803
 
 @license: GPLv2
 @copyright: © 2010 Open Phoenix IT SCA
 @organization: Open Phoenix IT S.Coop.And
 @author: Goliat
 @contact: goliat@open-phoenix.com
-@summary: UserProfile Model
+@summary: Cargo Model
 @version: 0.1
 '''
-from zope.interface import implements
 from storm.variables import *
-from goliat.session.user import IUserProfile
-from application.model.base.UserProfileBase import UserProfileBase
+from application.model.base.CargoBase import CargoBase
 
-class UserProfile(UserProfileBase):
-    """This class inherits from UserProfileBase class"""
-
-    implements(IUserProfile)
+class Cargo(CargoBase):
+    """This class inherits from CargoBase class"""
+    
     def __init__(self):
         """Consructor:
         
         ADD HERE YOUR INITIALIZATION CODE
         """
-        UserProfileBase.__init__(self)
+        CargoBase.__init__(self)            

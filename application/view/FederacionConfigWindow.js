@@ -52,14 +52,14 @@ GsCNT.view.FederacionConfigWindow = Ext.extend(Ext.Window, {
             '<b>Secretari@s</b>',
             '->',
             {
-                text    : 'Nuev@ Secretari@',
+                text    : 'Nueve Secretarie',
                 iconCls : 'icon_user',
                 scope   : this,
                 handler : this.onNewSecretario
             },
             '-',
             {
-                text    : 'Eliminar Secretari@',
+                text    : 'Eliminar Secretarie',
                 iconCls : 'icon_cancel',
                 scope   : this,
                 handler : this.onRemoveSecretario

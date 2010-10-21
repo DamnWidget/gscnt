@@ -30,8 +30,10 @@ GsCNT.view.HeaderPanel = Ext.extend(Ext.Panel, {
               '     <a href="http://sovjaen.cnt.es" target="_blank">'+
               '         <img class="gscnt-logo" src="/extjs/resources/images/default/s.gif" title="Confederación Nacional del Trabajo" />'+
               '     </a>'+
-              '     <div class="gscnt-header-alt"><span>Desarrollado por: Comisión de Desarrollo de Software Libre del SOV de Jaén</span></div>'+
-              '     <div class="gscnt-header-title"><span>Gestión de Sindicatos Libertarios</span></div>'+                 
+              '     <div class="gscnt-header-container">'+
+              '         <div class="gscnt-header-title"><span>Gestión de Sindicatos Libertarios</span><p>GsCNT v'+_version+'</p></div>'+
+              '         <div class="gscnt-header-alt"><span>Desarrollado por: Comisión de Desarrollo de Software Libre del SOV de Jaén</span></div>'+              
+              '     </div>'+                 
               '</div>',
 
     initComponent: function() {

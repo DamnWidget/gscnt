@@ -38,6 +38,7 @@ from goliat.database.store import Store
 from goliat.database.reference import Reference, ReferenceSet
 from goliat.database import Database
 from goliat.database.model import Model
+from twisted.internet import defer
 from goliat.session.user import UserData as GoliatUser
 from application.model.relation.UsersGroupGoliatUser import UsersGroupGoliatUser
 
@@ -70,24 +71,26 @@ class UsersGroupBase(Storm):
         return Model().view(UsersGroupBase)
 
     @staticmethod
-    def create(controller):
+    def create(data):
         """Create a new UsersGroupBase object and returns it."""
-        data=controller._request.args.get('data')
-        if data==None:
-            controller._sendback({'success' : False, 'message' : 'No data received from UI.'})
-        else:
-            object=json.loads(data[0])
-            result, msg=Model().isValidObject(object, UsersGroupBase)
-            if not result:
-                controller._sendback({'success' : False, 'message' : msg})
-                return
 
-            obj=UsersGroupBase()
-            return Model().create(Model().generate_object(obj, object), UsersGroupBase, controller)
+        if not data:
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
+
+        object=data
+        result, msg=Model().is_valid_object(object, UsersGroupBase)
+        if not result:
+            return defer.succeed({'success' : False, 'message' : msg})
+        obj=UsersGroupBase()
+        return Model().create(Model().generate_object(obj, object), UsersGroupBase, data)
 
     @staticmethod
     def update(data):
         """Update an object."""
+
+        if not data:
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
+
         return Model().update(UsersGroupBase, data)
 
     @staticmethod
@@ -95,7 +98,7 @@ class UsersGroupBase(Storm):
         """Destroy an object."""
 
         if not id:
-            return {'success' : False, 'message' : 'No data received from UI.'}
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
         else:
             return Model().destroy(int(id[0]), UsersGroupBase)
 
@@ -103,7 +106,7 @@ class UsersGroupBase(Storm):
     def get(id, ref=None):
         """Get a row."""
         if not id:
-            return {'success' : False, 'message' : 'No data received from UI.'}
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
         else:
             if ref:
                 model='{0}Base'.format(ref.capitalize())
@@ -115,13 +118,8 @@ class UsersGroupBase(Storm):
     @staticmethod
     def search(controller):
         """Perform a very basic search."""
-        data=controller._request.args.get('data')
-        if data==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
-        else:
-            args=json.loads(data[0])
-            c=''
-            for rec in args:
-                for k, v in rec.iteritems():
-                    c+='{0} == {1},'.format("EmployeeBase."+k, v)
-            return Model().search(UsersGroupBase, controller, eval(c))
+
+        objects=tuple([eval(p) for p in eval(data['objects'])])
+        where=eval(data['conditions'])
+
+        return Model().search(objects, where)

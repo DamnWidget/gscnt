@@ -38,6 +38,7 @@ from goliat.database.store import Store
 from goliat.database.reference import Reference, ReferenceSet
 from goliat.database import Database
 from goliat.database.model import Model
+from twisted.internet import defer
 from application.model.relation.SindicatoGoliatUser import SindicatoGoliatUser
 from application.model.base.UsersGroupBase import UsersGroupBase
 from application.model.base.AddressBase import AddressBase
@@ -73,58 +74,49 @@ class SindicatoBase(Storm):
         return Model().view(SindicatoBase)
 
     @staticmethod
-    def create(controller):
+    def create(data):
         """Create a new SindicatoBase object and returns it."""
-        data=controller._request.args.get('data')
-        if data==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
-        else:
-            object=json.loads(data[0])
-            result, msg=Model().isValidObject(object, SindicatoBase)
-            if not result:
-                controller._sendback({'success' : False, 'error' : msg})
-                return
 
-            obj=SindicatoBase()
-            return Model().create(Model().generate_object(obj, object), SindicatoBase, controller)
+        if not data:
+            return {'success' : False, 'error' : 'No data received from UI.'}
+
+        object=data
+        result, msg=Model().is_valid_object(object, SindicatoBase)
+        if not result:
+            return defer.succeed({'success' : False, 'message' : msg})
+        obj=SindicatoBase()
+        return Model().create(Model().generate_object(obj, object), SindicatoBase)
 
     @staticmethod
-    def update(controller):
+    def update(data):
         """Update an object."""
-        data=controller._request.args.get('data')
-        if data==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
-        else:
-            object=json.loads(data[0])
-            result, msg=Model().is_valid_object(object, SindicatoBase)
-            if not result:
-                controller._sendback({'success' : False, 'error' : msg})
-                return
 
-            return Model().update(object, SindicatoBase, controller)
+        if not data:
+            return defer.succeed({'success' : False, 'error' : 'No data received from UI.'})
+
+        return Model().update(SindicatoBase, data)
 
     @staticmethod
-    def destroy(controller):
+    def destroy(id):
         """Destroy an object."""
-        id=controller._request.args.get('id')
-        if id==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
+
+        if not id:
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
         else:
-            return Model().destroy(int(id[0]), SindicatoBase, controller)
+            return Model().destroy(int(id[0]), SindicatoBase)
 
     @staticmethod
-    def get(controller):
+    def get(id, ref=None):
         """Get a row."""
-        id=controller._request.args.get('id')
-        if id==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
+        if not id:
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
         else:
-            if controller._request.args.get('ref')!=None:
-                model='{0}Base'.format(controller._request.args.get('ref')[0].capitalize())
+            if ref:
+                model='{0}Base'.format(ref.capitalize())
                 model=eval(model)
-                return Model().get(int(id[0]), model, controller)
+                return Model().get(int(id[0]), model)
             else:
-                return Model().get(int(id[0]), SindicatoBase, controller)
+                return Model().get(int(id[0]), SindicatoBase)
 
     @staticmethod
     def search(controller):

@@ -22,7 +22,7 @@
 
 Ext.ns('GsCNT.view');
 
-GsCNT.view.UsersGroupForm = Ext.extend(Goliat.base.FormPanel, {
+GsCNT.view.CargoForm = Ext.extend(Goliat.base.FormPanel, {
     border       : true,
     autoScroll   : true,    
     bodyStyle    : "padding: 10px; background: #ffffff url(media/gatonegro_mini.png) no-repeat bottom right;",
@@ -40,7 +40,7 @@ GsCNT.view.UsersGroupForm = Ext.extend(Goliat.base.FormPanel, {
             items   : this.buildFormItems()
         });
         
-        GsCNT.view.UsersGroupForm.superclass.initComponent.call(this);
+        GsCNT.view.CargoForm.superclass.initComponent.call(this);
         
         this.addEvents({
             save    : true
@@ -48,18 +48,14 @@ GsCNT.view.UsersGroupForm = Ext.extend(Goliat.base.FormPanel, {
     },
     
     buildFormItems : function() {
-        var nameContainer       = this.buildNameContainer(),
-            descContainer       = this.buildDescContainer(),
-            activeContainer     = this.buildActiveContainer();       
+        var nameContainer       = this.buildNameContainer();       
            
         return [
             {
                 xtype   : 'hidden',
                 name    : 'id'
             },
-            nameContainer,
-            descContainer,
-            activeContainer
+            nameContainer            
         ];
     },
     
@@ -87,86 +83,29 @@ GsCNT.view.UsersGroupForm = Ext.extend(Goliat.base.FormPanel, {
                 }
             ]
         };
-    },
-    
-    buildDescContainer : function() {
-        return {
-            xtype       : 'container',
-            title       : 'Descripción',
-            flex        : 1,
-            bodyStle    : 'padding: 1px; margin: 0px',
-            layout      : 'form',
-            labelWidth  : 70,
-            width       : 270,
-            items       : {
-                xtype       : 'textarea',
-                fieldLabel  : 'Descripción',
-                name        : 'description',
-                anchor      : '100% 100%',
-                allowBlank  : false,                                
-            }
-        };
-    },
-    
-    buildActiveContainer : function() {
-        return {
-            xtype       : 'container',
-            layout      : 'column',
-            anchor      : '-10',
-            defaultType : 'container',
-            defaults    : {
-                width       : 280,
-                labelWidth  : 40,
-                layout      : 'form'
-            },
-            items       : [
-                {
-                    items   : {
-                        xtype           : 'combo',
-                        typeAhead       : true,
-                        triggerAction   : 'all',
-                        lazyRender      : true,
-                        mode            : 'local',                        
-                        fieldLabel      : 'Activo',
-                        hiddenName      : 'active',
-                        valueField      : 'id',
-                        displayField    : 'name',
-                        anchor          : '-10',
-                        emptyText       : '¿Grupo Activo?',
-                        allowBlank      : false,
-                        blankText       : 'Campo requerido...',
-                        store           : new Ext.data.ArrayStore({
-                            id      : 0,
-                            fields  : ['id', 'name'],
-                            data    : [[true, 'Si'], [false, 'No']]
-                        })                      
-                    }
-                }
-            ]
-        };
-    }    
+    }   
     
 });
 
-Ext.reg('usersgroupform', GsCNT.view.UsersGroupForm);
+Ext.reg('cargoform', GsCNT.view.CargoForm);
 
 
-GsCNT.view.UsersGroupFormWindow = Ext.extend(Ext.Window, {
+GsCNT.view.CargoFormWindow = Ext.extend(Ext.Window, {
     layout      : 'fit',
     modal       : true,
     width       : 320,
-    height      : 210,
+    height      : 112,
     resizable   : false,
     draggable   : true,
     center      : true,
     closable    : false,
-    title       : 'Crear nuevo Grupo de Usuarios',
-    iconCls     : 'icon_users_group',     
+    title       : 'Crear nuevo Cargo',
+    iconCls     : 'icon_tag',     
     
     initComponent : function() {        
         this.items = this.buildForm();
         this.buttons = this.buildButtons();        
-        GsCNT.view.UsersGroupFormWindow.superclass.initComponent.call(this);
+        GsCNT.view.CargoFormWindow.superclass.initComponent.call(this);
         
         this.addEvents('save');
     },
@@ -174,8 +113,8 @@ GsCNT.view.UsersGroupFormWindow = Ext.extend(Ext.Window, {
     buildForm : function() {
         return [
             {
-                xtype   : 'usersgroupform',
-                itemId  : 'ugForm'
+                xtype   : 'cargoform',
+                itemId  : 'cargoForm'
             }
         ];
     },
@@ -212,9 +151,9 @@ GsCNT.view.UsersGroupFormWindow = Ext.extend(Ext.Window, {
     },
     
     saveButton_onClick : function() {        
-        form = this.getComponent('ugForm');
+        form = this.getComponent('cargoForm');
         if(form.isValid()) {
-            this.fireEvent('save', form.getValues(), this.rs);
+            this.fireEvent('save', form.getValues());
             form.reset();
             this.hide();
         }

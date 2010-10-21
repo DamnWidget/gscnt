@@ -186,7 +186,8 @@ GsCNT.workspace = function() {
                     items: [
                         { title: 'Acerca de', autoLoad: 'doc/about.html', enableTabScroll: true, autoScroll: true, bodyStyle: "background: #ffffff url(media/gatonegro_mini.png) no-repeat bottom right;" },
                         { title: 'Autores', autoLoad: 'doc/authors.html', enableTabScroll: true, autoScroll: true, bodyStyle: "background: #ffffff url(media/gatonegro_mini.png) no-repeat bottom right;" },
-                        { title: 'Licencia', autoLoad: 'doc/gpl-2.0.html', enableTabScroll: true, autoScroll: true, bodyStyle: "background: #ffffff url(media/gatonegro_mini.png) no-repeat bottom right;" }
+                        { title: 'Licencia', autoLoad: 'doc/gpl-2.0.html', enableTabScroll: true, autoScroll: true, bodyStyle: "background: #ffffff url(media/gatonegro_mini.png) no-repeat bottom right;" },
+                        { title: '...', enableTabScroll: true, autoScroll: true, bodyStyle: "background: #ffffff url(media/bandera_confederal_prof.png) no-repeat center center;" }
                     ]
                 }),
                 buttons: [{

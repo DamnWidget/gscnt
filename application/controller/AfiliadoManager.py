@@ -17,29 +17,29 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 ##
-# $id application/controller/GroupsManager.py created on 2010-07-18 17:25:42.727202 by Goliat $
+# $id application/controller/AfiliadoManager.py created on 2010-10-17 23:13:40.505052 by Goliat $
 '''
-Created on 2010-07-18 17:25:42.727202
+Created on 2010-10-17 23:13:40.505052
 
 @license: GPLv2
 @copyright: © 2010 Open Phoenix IT SCA
 @organization: Open Phoenix IT S.Coop.And
 @author: Goliat
 @contact: goliat@open-phoenix.com
-@summary: GroupsManager Module
+@summary: AfiliadoManager Module
 @version: 0.1
 '''
 from twisted.web import server
+from twisted.internet import defer
 import json
 
 from goliat.webserver import gresource
 from goliat.session.user import IUser, UserData
 from goliat import http
-from application.model.UsersGroup import UsersGroup
-from application.model.Federacion import Federacion
+from application.model.UserProfile import UserProfile
 
-class GroupsManager(gresource.GResource):
-    """GroupsManager class:"""
+class AfiliadoManager(gresource.GResource):
+    """AfiliadoManager class:"""
 
 
     def __init__(self):
@@ -54,70 +54,89 @@ class GroupsManager(gresource.GResource):
 
         return json.dumps({'success' : False, 'message' : 'Not implemented yet.'})
 
-
     def render_POST(self, request):
         """Process POST Request."""
 
         return json.dumps({'success' : False, 'message' : 'Not implemented yet.'})
 
     def view(self, request, **kwargs):
-        """Perform read CRUD action"""
+        """Performs read CRUD action."""
 
-        def cb_sendback(result):
-            self.sendback(request, result)
+        def cb_sendback(results):
+            users=[]
+            for user in results:
+                users.append(user[1])
 
-        UsersGroup.view().addCallback(cb_sendback)
+            self.sendback(request, {'success' : True, 'data' : users})
+
+        def cb_get_data(results):
+            dl=defer.DeferredList(results).addCallback(cb_sendback)
+
+        UserProfile.get_list().addCallback(cb_get_data)
 
         return server.NOT_DONE_YET
 
     def create(self, request, **kwargs):
-        """Perform create CRUD action"""
+        """Performs create CRUD action."""
 
         def cb_sendback(result):
             self.sendback(request, result)
 
-        UsersGroup.create(eval(kwargs.get('data')[0])).addCallback(cb_sendback)
+        UserProfile.create(kwargs).addCallback(cb_sendback)
 
         return server.NOT_DONE_YET
 
     def update(self, request, **kwargs):
-        """Perform update CRUD action"""
+        """Performs update CRUD action."""
 
         def cb_sendback(result):
             self.sendback(request, result)
 
-        UsersGroup.update(eval(kwargs.get('data')[0])).addCallback(cb_sendback)
+        UserProfile.update(kwargs).addCallback(cb_sendback)
 
         return server.NOT_DONE_YET
 
     def destroy(self, request, **kwargs):
-        """Perform destroy CRUD action"""
+        """Performs destroy CRUD action."""
 
         def cb_sendback(result):
             self.sendback(request, result)
 
-        def cb_check(check):
-            if not check:
-                UsersGroup.destroy(kwargs.get('data')).addCallback(cb_sendback)
-            else:
-                return json.dumps({'success' : False, 'message' : 'No puede eliminar al comité de la Federación Local'})
-
-        Federacion.view().addCallback(Federacion.check_group, int(kwargs.get('data')[0])).addCallback(cb_check)
+        UserProfile.destroy(int(kwargs.get('id')[0])).addCallback(cb_sendback)
 
         return server.NOT_DONE_YET
 
+    def get(self, request, **kwargs):
+        """Performs an extra read CRUD action."""
+
+        def cb_sendback(result):
+            self.sendback(request, result)
+
+        UserProfile.get(int(kwargs.get('id')[0]), kwargs.get('ref', None)).addCallback(cb_sendback)
+
+        return server.NOT_DONE_YET
+
+    def search(self, request, **kwargs):
+        """Performs a search."""
+
+        def cb_sendback(result):
+            self.sendback(request, result)
+
+        UserProfile.search(kwargs.get('object')[0], kwargs.get('condition')[0]).addCallback(cb_sendback)
+
+        return server.NOT_DONE_YET
 
     def get_register_path(self):
         """Returns the module resource registration path."""
-        return "groupsmanager"
+        return "afiliadomanager"
 
     def get_schema_model(self, request, **kwargs):
-        """Return the schema model UsersGroup architecture."""
-        model_schema, model_view=UsersGroup.get_model_info()
+        """Return the schema model UserProfile architecture."""
+        model_schema, model_view=UserProfile.get_model_info()
         if model_schema==None:
             return json.dumps({
                 "success" : False,
-                "error" : "Unable to fetch a schema for model users_group"
+                "error" : "Unable to fetch a schema for model user_profile"
             })
 
         return json.dumps({

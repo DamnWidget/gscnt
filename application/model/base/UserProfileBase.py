@@ -17,9 +17,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 ##
-# $id application/model/base/UserProfileBase.py created on 2010-07-18 15:21:02.501715 by Goliat $
+# $id application/model/base/UserProfileBase.py created on 2010-10-17 16:09:25.092322 by Goliat $
+from csvn.core.functions import DIR
 '''
-Created on 2010-07-18 15:21:02.501715
+Created on 2010-10-17 16:09:25.092322
 
 @license: GPLv2
 @copyright: © 2010 Open Phoenix IT SCA
@@ -34,11 +35,13 @@ from storm.base import Storm
 from storm.locals import *
 from storm import Undef
 
-#from goliat.database.store import Store
+from goliat.database.store import Store
 from goliat.database.reference import Reference, ReferenceSet
 from goliat.database import Database
 from goliat.database.model import Model
-from goliat.session.user import User
+from twisted.internet import defer
+from goliat.session.user import UserData
+from application.model.base.AddressBase import AddressBase
 
 class UserProfileBase(Storm):
     __storm_table__="user_profile"
@@ -46,13 +49,14 @@ class UserProfileBase(Storm):
     id=Int(primary=True, value=Undef, allow_none=False)
     user_id=Int(primary=False, value=Undef, allow_none=False)
     nia=Int(primary=False, value=Undef, allow_none=False)
-    comite=Bool(primary=False, value=False)
-    title=Unicode(primary=False, value="Militante")
+    comite=Bool(primary=False, value=False, allow_none=True)
+    title=Unicode(primary=False, value='Militante', allow_none=True)
     validation_key=Unicode(primary=False, value=Undef, allow_none=True)
     validated=Bool(primary=False, value=False, allow_none=True)
-    user=Reference(user_id, "User.id")
+    user=Reference(user_id, UserData.id)
+    address=ReferenceSet("UserProfile.id", "Address.id")
 
-    #store=Store(Database().get_database())
+    store=Store(Database().get_database())
 
     def __init__(self):
         """Storm object representation of SQL table user_profile
@@ -67,63 +71,55 @@ class UserProfileBase(Storm):
         return Model().get_model_info(UserProfileBase)
 
     @staticmethod
-    def view(controller):
+    def view():
         """Returns a list of every row at model."""
-        return Model().view(UserProfileBase, controller)
+        return Model().view(UserProfileBase)
 
     @staticmethod
-    def create(controller):
+    def create(data):
         """Create a new UserProfileBase object and returns it."""
-        data=controller._request.args.get('data')
-        if data==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
-        else:
-            object=json.loads(data[0])
-            result, msg=Model().isValidObject(object, UserProfileBase)
-            if not result:
-                controller._sendback({'success' : False, 'error' : msg})
-                return
 
-            obj=UserProfileBase()
-            return Model().create(Model().generate_object(obj, object), UserProfileBase, controller)
+        if not data:
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
+
+        object=data
+        result, msg=Model().is_valid_object(object, UserProfileBase)
+        if not result:
+            return defer.succeed({'success' : False, 'message' : msg})
+        obj=UserProfileBase()
+        return Model().create(Model().generate_object(obj, object), UserProfileBase)
 
     @staticmethod
-    def update(controller):
+    def update(data):
         """Update an object."""
-        data=controller._request.args.get('data')
-        if data==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
-        else:
-            object=json.loads(data[0])
-            result, msg=Model().is_valid_object(object, UserProfileBase)
-            if not result:
-                controller._sendback({'success' : False, 'error' : msg})
-                return
 
-            return Model().update(object, UserProfileBase, controller)
+        if not data:
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
+
+        return Model().update(UserProfileBase, data)
 
     @staticmethod
-    def destroy(controller):
+    def destroy(id):
         """Destroy an object."""
-        id=controller._request.args.get('id')
-        if id==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
+
+        if not id:
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
         else:
-            return Model().destroy(int(id[0]), UserProfileBase, controller)
+            return Model().destroy(int(id[0]), UserProfileBase)
 
     @staticmethod
-    def get(controller):
+    def get(id, ref=None):
         """Get a row."""
-        id=controller._request.args.get('id')
-        if id==None:
-            controller._sendback({'success' : False, 'error' : 'No data received from UI.'})
+
+        if not id:
+            return defer.succeed({'success' : False, 'message' : 'No data received from UI.'})
         else:
-            if controller._request.args.get('ref')!=None:
-                model='{0}Base'.format(controller._request.args.get('ref')[0].capitalize())
+            if ref:
+                model='{0}Base'.format(ref.capitalize())
                 model=eval(model)
-                return Model().get(int(id[0]), model, controller)
+                return Model().get(int(id), model)
             else:
-                return Model().get(int(id[0]), UserProfileBase, controller)
+                return Model().get(int(id), UserProfileBase)
 
     @staticmethod
     def search(controller):
@@ -138,3 +134,25 @@ class UserProfileBase(Storm):
                 for k, v in rec.iteritems():
                     c+='{0} == {1},'.format("EmployeeBase."+k, v)
             return Model().search(UserProfileBase, controller, eval(c))
+
+    @staticmethod
+    def get_list():
+        """Return a list of profile + user data."""
+
+        def cb_find(result):
+            return result.all().addCallback(cb_all)
+
+        def cb_all(results):
+            users=list()
+            for res in results:
+                users.append(res.user.addCallback(cb_prepare, res))
+
+            return users
+
+        def cb_prepare(user, profile):
+            puser={'id' : profile.id, 'user_id' : user.id, 'name' : user.username, 'nia' : profile.nia}
+
+
+            return puser
+
+        return UserProfileBase.store.find(UserProfileBase, UserProfileBase.comite==False).addCallback(cb_find)

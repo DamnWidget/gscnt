@@ -199,8 +199,8 @@
 #
 
 database:
-    _properties:
-        uri:                    'postgres://cntjaen:7neajtnc7@localhost:5432/gscnt'
+    _properties:                
+        uri:                    'sqlite:db'
     tables:
         user_profile:
             id:                 ~
@@ -260,4 +260,10 @@ database:
                 comite:         { type: one2one, foreignTable: users_group, foreignKey: id, view: comite }
             _order:
                 fieldsOrder:    [ id, name, phone, address, comite_id ]
+        
+        cargo:
+            id:                 ~
+            name:               { type: varchar, required: true }
+            _order:
+                fieldsOrder:    [ id, name ]
                

@@ -22,7 +22,7 @@
 
 Ext.ns('GsCNT.view');
 
-GsCNT.view.UsersGroupForm = Ext.extend(Goliat.base.FormPanel, {
+GsCNT.view.AfiliadoForm = Ext.extend(Goliat.base.FormPanel, {
     border       : true,
     autoScroll   : true,    
     bodyStyle    : "padding: 10px; background: #ffffff url(media/gatonegro_mini.png) no-repeat bottom right;",
@@ -40,30 +40,40 @@ GsCNT.view.UsersGroupForm = Ext.extend(Goliat.base.FormPanel, {
             items   : this.buildFormItems()
         });
         
-        GsCNT.view.UsersGroupForm.superclass.initComponent.call(this);
-        
-        this.addEvents({
-            save    : true
-        });
+        GsCNT.view.AfiliadoForm.superclass.initComponent.call(this);
     },
     
     buildFormItems : function() {
-        var nameContainer       = this.buildNameContainer(),
-            descContainer       = this.buildDescContainer(),
-            activeContainer     = this.buildActiveContainer();       
+        var cargoContainer       = this.buildCargoContainer(),            
+            afiliadoContainer    = this.buildAfiliadoContainer();       
            
         return [
             {
                 xtype   : 'hidden',
                 name    : 'id'
             },
-            nameContainer,
-            descContainer,
-            activeContainer
+            afiliadoContainer,
+            cargoContainer
         ];
     },
     
-    buildNameContainer : function() {
+    buildCargoContainer : function() {
+        var cargos = [
+            ['SG', 'Secretarie General'],
+            ['SO', 'Secretarie de Organización'],
+            ['ST', 'Secretarie de Tesorería'],
+            ['SP', 'Secretarie de Prensa y Propaganda'],
+            ['SASI', 'Secretarie de Acción Sindical'],
+            ['SASO', 'Secretarie de Acción Social'],
+            ['SJYP', 'Secretarie de Jurídica y Pro-Preses'],
+            ['SPP', 'Secretarie de Patrimonio']
+        ];
+        
+        var store = new Ext.data.ArrayStore({
+            fields  : ['abbr', 'nombre'],
+            data    : cargos
+        });
+        
         return {
             xtype       : 'container',
             layout      : 'column',
@@ -77,43 +87,31 @@ GsCNT.view.UsersGroupForm = Ext.extend(Goliat.base.FormPanel, {
             items       : [
                 {
                     items   : {
-                        xtype       : 'textfield',
-                        fieldLabel  : 'Nombre',
-                        name        : 'name',
-                        anchor      : '-10',
-                        allowBlank  : false,
-                        maxLength   : 128
+                        xtype           : 'combo',
+                        store           : store,
+                        displayField    : 'nombre',                        
+                        fieldLabel      : 'Cargo',
+                        typeAhead       : true,
+                        mode            : 'local',
+                        forceSelection  : true,
+                        triggerAction   : 'all',
+                        emptyText       : 'Selecciona un cargo...',
+                        selectOnFocus   : true,
+                        name            : 'cargo',
+                        anchor          : '-10',
+                        allowBlank      : false                        
                     }
                 }
             ]
         };
     },
     
-    buildDescContainer : function() {
-        return {
-            xtype       : 'container',
-            title       : 'Descripción',
-            flex        : 1,
-            bodyStle    : 'padding: 1px; margin: 0px',
-            layout      : 'form',
-            labelWidth  : 70,
-            width       : 270,
-            items       : {
-                xtype       : 'textarea',
-                fieldLabel  : 'Descripción',
-                name        : 'description',
-                anchor      : '100% 100%',
-                allowBlank  : false,                                
-            }
-        };
-    },
-    
-    buildActiveContainer : function() {
+    buildAfiliadoContainer : function() {
         return {
             xtype       : 'container',
             layout      : 'column',
             anchor      : '-10',
-            defaultType : 'container',
+            defaultType : 'container',            
             defaults    : {
                 width       : 280,
                 labelWidth  : 40,
@@ -122,36 +120,44 @@ GsCNT.view.UsersGroupForm = Ext.extend(Goliat.base.FormPanel, {
             items       : [
                 {
                     items   : {
-                        xtype           : 'combo',
-                        typeAhead       : true,
-                        triggerAction   : 'all',
-                        lazyRender      : true,
-                        mode            : 'local',                        
-                        fieldLabel      : 'Activo',
-                        hiddenName      : 'active',
+                        xtype           : 'relation',
+                        id              : 'ignore-me',
+                        url             : '/afiliadomanager',
+                        fieldLabel      : 'Afiliade',
+                        hiddenName      : 'afiliado_id',
                         valueField      : 'id',
                         displayField    : 'name',
+                        relationModel   : 'Afiliade a la CNT-AIT',
+                        relationManager : GsCNT.view.AfiliadoFormWindow,                        
                         anchor          : '-10',
-                        emptyText       : '¿Grupo Activo?',
-                        allowBlank      : false,
-                        blankText       : 'Campo requerido...',
-                        store           : new Ext.data.ArrayStore({
-                            id      : 0,
-                            fields  : ['id', 'name'],
-                            data    : [[true, 'Si'], [false, 'No']]
-                        })                      
+                        emptyText       : 'Selecciona un Afiliade',
+                        listeners       : {
+                            scope           : this,
+                            beforewrite     : function(store, action, record) {
+                                retval = true;
+                                switch(action) {
+                                    case 'destroy':
+                                        if(record.id == GsCNT.workspace.getSession().federacionData.comite_id) {
+                                            retval = false;
+                                            Goliat.Msg.alert('No puede eliminar el comite de la Federación Local.', this);
+                                        }
+                                        break;
+                                }
+                                
+                                return retval;
+                            }
+                        }                        
                     }
                 }
             ]
         };
-    }    
+    }
     
 });
 
-Ext.reg('usersgroupform', GsCNT.view.UsersGroupForm);
+Ext.reg('afiliadoform', GsCNT.view.AfiliadoForm);
 
-
-GsCNT.view.UsersGroupFormWindow = Ext.extend(Ext.Window, {
+GsCNT.view.AfiliadoFormWindow = Ext.extend(Ext.Window, {
     layout      : 'fit',
     modal       : true,
     width       : 320,
@@ -160,22 +166,19 @@ GsCNT.view.UsersGroupFormWindow = Ext.extend(Ext.Window, {
     draggable   : true,
     center      : true,
     closable    : false,
-    title       : 'Crear nuevo Grupo de Usuarios',
-    iconCls     : 'icon_users_group',     
+    title       : 'Crear nueve Afiliade',
+    iconCls     : 'icon_user',     
     
     initComponent : function() {        
         this.items = this.buildForm();
         this.buttons = this.buildButtons();        
         GsCNT.view.UsersGroupFormWindow.superclass.initComponent.call(this);
-        
-        this.addEvents('save');
     },
     
     buildForm : function() {
         return [
             {
-                xtype   : 'usersgroupform',
-                itemId  : 'ugForm'
+                xtype   : 'afiliadoform'
             }
         ];
     },
@@ -211,16 +214,7 @@ GsCNT.view.UsersGroupFormWindow = Ext.extend(Ext.Window, {
         ];
     },
     
-    saveButton_onClick : function() {        
-        form = this.getComponent('ugForm');
-        if(form.isValid()) {
-            this.fireEvent('save', form.getValues(), this.rs);
-            form.reset();
-            this.hide();
-        }
-        else {
-            Goliat.Msg.error('El formulario contiene errores.', this);
-        }       
-    }    
-     
+    saveButton_onClick : function() {
+        
+    }
 });

@@ -95,8 +95,7 @@ GsCNT.view.FederacionGrid = Ext.extend(Ext.grid.GridPanel, {
         return this.selModel.getSelections();
     },
     
-    onLoad : function(proxy, response) {
-        
+    onLoad : function(proxy, response) {        
     },
     
     onException : function(proxy, type, action, options, response, args) {

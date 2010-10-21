@@ -44,17 +44,3 @@ class UsersGroup(UsersGroupBase):
         ADD HERE YOUR INITIALIZATION CODE
         """
         UsersGroupBase.__init__(self)
-
-    @staticmethod
-    def create(data):
-        """Creates a new UsersGroup object."""
-
-        if not data:
-            return  defer.succeed({'success' : False, 'error' : 'No data received by frontend.'})
-
-        object=data
-        result, msg=Model().is_valid_object(object, UsersGroupBase)
-        if not result:
-            return defer.succeed({'success' : False, 'error' : msg})
-        obj=UsersGroupBase()
-        return Model().create(Model().generate_object(obj, object), UsersGroupBase)

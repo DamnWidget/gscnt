@@ -79,7 +79,7 @@ class Federacion(FederacionBase):
 
         def cb_update(result):
             return Model().update(Federacion, {
-                'id' : result[0]['id'],
+                'id' : result['data'][0]['id'],
                 'name' : unicode(data.get('name')[0].decode('utf8'))
             })
 
@@ -103,7 +103,7 @@ class Federacion(FederacionBase):
     def check_group(group, id):
         """Checks if the given group id is equal to the configured comite_id"""
 
-        if group[0]['comite_id']==id:
+        if group['data'][0]['comite_id']==id:
             return defer.succeed(True)
 
         return defer.succeed(False)
