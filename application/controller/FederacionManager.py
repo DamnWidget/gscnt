@@ -30,6 +30,7 @@ Created on 2010-07-18 16:50:30.030695
 @version: 0.1
 '''
 from twisted.web import server
+from twisted.internet import defer
 import json
 
 from goliat.webserver import gresource
@@ -99,57 +100,52 @@ class FederacionManager(gresource.GResource):
     def _save(self, result, request):
         self.sendback(request, result)
 
+    def save_secretario(self, request, **kwargs):
+        """
+        Save a Comité Member.
+        """
+
+        def cb_sendback(result):
+            self.sendback(request, result)
+
+        Federacion.save_secretario(kwargs).addCallback(cb_sendback)
+
+        return server.NOT_DONE_YET
+
+    def remove_secretario(self, request, **kwargs):
+        """
+        Remove Comité Members.
+        """
+
+        def cb_sendback(result):
+            self.sendback(request, result)
+
+        user_ids=[int(p) for p in kwargs.get('secretarios')]
+        Federacion.remove_secretario(user_ids).addCallback(cb_sendback)
+
+        return server.NOT_DONE_YET
+
     def get_comite(self, request, **kwargs):
         """
         Returns the Comite Members.
         """
 
-        def cb_comite_dump(results):
-            self._get_all_comites(request, results)
-
-        def cb_dump(results):
-            print results
-            if not results:
-                self.sendback(request, {'success' : False, 'message' : 'No existen datos del Comité de la Federación Local'})
+        def cb_get_data(results):
+            if type(results) is dict:
+                self.sendback(request, results)
             else:
-                results.comite.addCallback(cb_comite_dump)
+                dl=defer.DeferredList(results).addCallback(cb_sendback)
 
-        def cb_read(results):
-            if len(results) is 0:
-                self.sendback(request, {'success' : False, 'message' : 'No existen datos de la Federación Local'})
-            else:
-                Federacion.store.get(Federacion, results['data'][0]['id']).addCallback(cb_dump)
+        def cb_sendback(results):
+            people=list()
+            for user in results:
+                people.append(user[1])
 
-        if not kwargs.get('id', None):
-            Federacion.view().addCallback(cb_read)
-        else:
-            cb_read([int(kwargs['id'][0])])
+            self.sendback(request, {'success' : True, 'people' : people})
+
+        Federacion.get_comite_members().addCallback(cb_get_data)
+
         return server.NOT_DONE_YET
-
-    def _get_all_comites(self, request, users_group):
-        """Returns all comites from user group."""
-
-        from goliat.session.user import UserProfileProxy
-
-        def cb_order(users):
-            rusers=[]
-            for user in users:
-                uprofile=UserProfileProxy()
-                uprofile.load(user.id)
-                rusers.append({
-                    'id'       : user.id,
-                    'name'     : user.username,
-                    'nia'      : uprofile.nia,
-                    'comite'   : uprofile.comite,
-                    'title'    : uprofile.title
-                })
-            self.sendback(request, {'success' : True, 'people' :  rusers })
-
-        def cb_read(results):
-            results.user_ids.all().addCallback(cb_order)
-
-        ugroup=UsersGroup()
-        ugroup.store.get(UsersGroup, users_group.id).addCallback(cb_read)
 
     def check_sindicatos(self, request, **kwargs):
         """Check if this federacion has sindicatos"""

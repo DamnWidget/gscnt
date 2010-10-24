@@ -95,9 +95,27 @@ class Federacion(FederacionBase):
         return Model().update(UsersGroup, params).addCallback(cb_read)
 
     @staticmethod
-    def get_comite(id):
-        fl=Federacion.store.get(id)
-        return fl.comite
+    def get_comite():
+        def retrieve_comite(fl):
+            if type(fl) is dict:
+                return fl
+            return fl.comite.addCallback(cb_get_comite)
+
+        def cb_get_comite(comite):
+            if not comite:
+                return {'success' : False, 'message' : 'No existen datos del Comité de la Federación Local'}
+            return comite
+
+        return Federacion.get_fl().addCallback(retrieve_comite)
+
+    @staticmethod
+    def get_fl():
+        def cb_get(results):
+            if len(results) is 0:
+                return {'success' : False, 'message' : 'No existen datos de la Federación Local'}
+            return Federacion.store.get(Federacion, results['data'][0]['id'])
+
+        return Federacion.view().addCallback(cb_get)
 
     @staticmethod
     def check_group(group, id):
@@ -107,3 +125,99 @@ class Federacion(FederacionBase):
             return defer.succeed(True)
 
         return defer.succeed(False)
+
+    @staticmethod
+    def save_secretario(kwargs):
+        """Save a secretario."""
+
+        from application.model.UserProfile import UserProfile
+        from goliat.session.user import UserData
+
+        user_id=int(kwargs.get('afiliado_id')[0])
+        cargo_id=int(kwargs.get('cargo_id')[0])
+
+        def cb_get_user(comite):
+            if type(comite) is dict:
+                return comite
+            return Federacion.store.get(UserData, user_id).addCallback(cb_add, comite)
+
+        def cb_add(user, comite):
+            return comite.user_ids.add(user).addCallback(cb_get_profile, user)
+
+        def cb_get_profile(ign, user):
+            return Federacion.store.get(UserProfile, user.id).addCallback(cb_set_title)
+
+        def cb_set_title(user_profile):
+            user_profile.title=unicode(kwargs.get('cargo_name')[0].decode('utf8'))
+            Federacion.store.commit()
+
+            return {'success' : True}
+
+        return Federacion.get_comite().addCallback(cb_get_user)
+
+    @staticmethod
+    def remove_secretario(ids):
+        """Remove secretarios."""
+
+        from application.model.UserProfile import UserProfile
+        from goliat.session.user import UserData
+
+        def cb_get_user(comite, user_id):
+            if type(comite) is dict:
+                return comite
+            return Federacion.store.get(UserData, user_id).addCallback(cb_remove, comite)
+
+        def cb_remove(user, comite):
+            return comite.user_ids.remove(user).addCallback(cb_get_profile, user)
+
+        def cb_get_profile(ign, user):
+            return Federacion.store.get(UserProfile, user.id).addCallback(cb_unset_title)
+
+        def cb_unset_title(user_profile):
+            user_profile.title=unicode('')
+
+            return True
+
+        def cb_return_data(ign):
+            Federacion.store.commit()
+            return {'success' : True}
+
+        dl=list()
+        for user_id in ids:
+            dl.append(Federacion.get_comite().addCallback(cb_get_user, user_id))
+
+        return defer.DeferredList(dl).addCallback(cb_return_data)
+
+    @staticmethod
+    def get_comite_members():
+        """Get comite members."""
+
+        from application.model.UserProfile import UserProfile
+
+        def cb_get_members(comite):
+            if type(comite) is dict:
+                return comite
+            return comite.user_ids.all().addCallback(cb_parse)
+
+        def cb_parse(users):
+            if len(users) is 0:
+                return {'success' : True, 'people' : [] }
+            rusers=list()
+            for user in users:
+                rusers.append(Federacion.store.get(UserProfile, user.id).addCallback(cb_prepare, user))
+
+            return rusers
+
+        def cb_prepare(profile, user):
+            puser={'id' : user.id, 'profile_id' : profile.id, 'name' : user.username, 'nia' : profile.nia, 'title' : profile.title}
+
+            return profile.sindicato.all().addCallback(cb_prepare_sindicato, puser)
+
+        def cb_prepare_sindicato(sindicato, puser):
+            if len(sindicato) is 0:
+                return puser
+            puser['sindicato_name']=sindicato[0].name
+
+            return puser
+
+        return Federacion.get_comite().addCallback(cb_get_members)

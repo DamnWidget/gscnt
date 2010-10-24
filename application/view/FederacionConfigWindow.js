@@ -80,13 +80,7 @@ GsCNT.view.FederacionConfigWindow = Ext.extend(Ext.Window, {
     },
     
     buildButtons : function() {
-        return [            
-            {
-                text    : 'Guardar',
-                iconCls : 'icon_accept',
-                scope   : this,
-                handler : this.saveButton_onClick
-            },
+        return [
             {
                 text    : 'Cerrar',
                 iconCls : 'icon_cancel',
@@ -97,13 +91,7 @@ GsCNT.view.FederacionConfigWindow = Ext.extend(Ext.Window, {
     },
     
     cancelButton_onClick : function() {
-        Goliat.Msg.confirm('¿Está seguro de que quiere cerrar el formulario?<br />Cualquier cambio será irrecuperable una vez cerrado si no ha guardado previamente.', this, function(btn) {
-            if (btn == 'yes') this.close();
-        });         
-    },
-    
-    saveButton_onClick : function() {
-            
+        this.close();
     },
     
     onGridRowDblClick : function(grid, rowIndex) {
@@ -117,7 +105,7 @@ GsCNT.view.FederacionConfigWindow = Ext.extend(Ext.Window, {
     },
     
     onRemoveSecretario : function() {
-        
+        this.fireEvent('removesecretario', this);
     },
     
     getGrid : function() {

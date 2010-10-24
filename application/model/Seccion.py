@@ -17,35 +17,27 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 ##
-# $id application/model/UsersGroup.py created on 2010-07-18 17:25:42.723711 by Goliat $
+# $id application/model/Seccion.py created on 2010-10-24 23:01:03.351542 by Goliat $
 '''
-Created on 2010-07-18 17:25:42.723711
+Created on 2010-10-24 23:01:03.351542
 
 @license: GPLv2
 @copyright: © 2010 Open Phoenix IT SCA
 @organization: Open Phoenix IT S.Coop.And
 @author: Goliat
 @contact: goliat@open-phoenix.com
-@summary: UsersGroup Model
+@summary: Seccion Model
 @version: 0.1
 '''
 from storm.variables import *
-from twisted.internet import defer
-from goliat.database.model import Model
-import json
-from application.model.base.UsersGroupBase import UsersGroupBase
+from application.model.base.SeccionBase import SeccionBase
 
-class UsersGroup(UsersGroupBase):
-    """This class inherits from UsersGroupBase class"""
-
+class Seccion(SeccionBase):
+    """This class inherits from SeccionBase class"""
+    
     def __init__(self):
         """Consructor:
         
         ADD HERE YOUR INITIALIZATION CODE
         """
-        UsersGroupBase.__init__(self)
-
-    def save_member(self, group_id, afiliado_id):
-        """Save an afiliado_id into a group_id."""
-        pass
-
+        SeccionBase.__init__(self)            

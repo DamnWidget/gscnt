@@ -32,11 +32,14 @@ Created on 2010-10-17 23:13:40.502370
 from zope.interface import implements
 from storm.variables import *
 from goliat.session.user import IUserProfile
+from goliat.database.reference import ReferenceSet
 from application.model.base.UserProfileBase import UserProfileBase
+from application.model.Sindicato import Sindicato
 
 class UserProfile(UserProfileBase):
     """This class inherits from UserProfileBase class"""
 
+    sindicato=ReferenceSet("UserProfile.user_id", "SindicatoGoliatUser.goliat_user_id", "SindicatoGoliatUser.sindicato_id", "Sindicato.id")
     implements(IUserProfile)
     def __init__(self):
         """Consructor:
@@ -44,3 +47,24 @@ class UserProfile(UserProfileBase):
         ADD HERE YOUR INITIALIZATION CODE
         """
         UserProfileBase.__init__(self)
+
+    @staticmethod
+    def get_list():
+        """Return a list of profile + user data."""
+
+        def cb_find(result):
+            return result.all().addCallback(cb_all)
+
+        def cb_all(results):
+            users=list()
+            for res in results:
+                users.append(res.user.addCallback(cb_prepare, res))
+
+            return users
+
+        def cb_prepare(user, profile):
+            puser={'id' : profile.id, 'user_id' : user.id, 'name' : user.username, 'nia' : profile.nia}
+
+            return puser
+
+        return UserProfile.store.find(UserProfile, UserProfile.comite==False).addCallback(cb_find)

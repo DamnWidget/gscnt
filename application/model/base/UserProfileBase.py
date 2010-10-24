@@ -134,25 +134,3 @@ class UserProfileBase(Storm):
                 for k, v in rec.iteritems():
                     c+='{0} == {1},'.format("EmployeeBase."+k, v)
             return Model().search(UserProfileBase, controller, eval(c))
-
-    @staticmethod
-    def get_list():
-        """Return a list of profile + user data."""
-
-        def cb_find(result):
-            return result.all().addCallback(cb_all)
-
-        def cb_all(results):
-            users=list()
-            for res in results:
-                users.append(res.user.addCallback(cb_prepare, res))
-
-            return users
-
-        def cb_prepare(user, profile):
-            puser={'id' : profile.id, 'user_id' : user.id, 'name' : user.username, 'nia' : profile.nia}
-
-
-            return puser
-
-        return UserProfileBase.store.find(UserProfileBase, UserProfileBase.comite==False).addCallback(cb_find)

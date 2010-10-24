@@ -58,10 +58,10 @@ GsCNT.view.FederacionGrid = Ext.extend(Ext.grid.GridPanel, {
             xtype    : 'jsonstore',            
             id       : 'id',                        
             autoLoad : false,
+            root     : 'people',
             proxy    : new Ext.data.HttpProxy({                                
                 api     : {
-                    read    : { url: 'federacionmanager/get_comite', method: 'GET' },
-                    update  : { url: 'federacionmanager/set_comite', method: 'POST' }                                        
+                    read    : { url: 'federacionmanager/get_comite', method: 'GET' }                                                         
                 }
             }),
             fields   : [

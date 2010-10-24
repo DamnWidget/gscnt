@@ -199,7 +199,7 @@
 #
 
 database:
-    _properties:                
+    _properties:        
         uri:                    'sqlite:db'
     tables:
         user_profile:
@@ -238,6 +238,21 @@ database:
                 user_ids:       { type: many2many, foreignTable: goliat_user, foreignKey: id, localKey: id, keys: [ users_group_id, goliat_user_id ] }
             _order:
                 fieldsOrder:    [ id, name, description, active, user_ids ]
+        
+        seccion:
+            id:                 ~
+            name:               { type: varchar, size: 256, required: true }
+            description:        { type: varchar }
+            active:             { type: boolean, default: true }
+            comite_id:          { type: integer }
+            sindicato_id:       { type: integer }
+            _relation:
+                address:        { type: many2one, localKey: id, foreignTable: address, foreignKey: id }
+                user_ids:       { type: many2one, foreignTable: goliat_user, foreignKey: id, localKey: id }
+                comite:         { type: one2one, foreignTable: users_group, foreignKey: id, view: comite }
+                sindicato:      { type: one2one, foreignTable: sindicato, foreignKey: id, view: sindicato }
+            _order:
+                fieldsOrder:    [ id, name, description, active, address, sindicato_id, comite_id, user_ids ]
         
         sindicato:
             id:                 ~

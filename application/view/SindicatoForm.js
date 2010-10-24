@@ -38,7 +38,7 @@ GsCNT.view.SindicatoForm = Ext.extend(Goliat.base.FormPanel, {
     initComponent : function() {
         Ext.applyIf(this, {      
             items   : this.buildFormItems()
-        });
+        });        
         
         GsCNT.view.SindicatoForm.superclass.initComponent.call(this);
     },
@@ -149,6 +149,14 @@ GsCNT.view.SindicatoForm = Ext.extend(Goliat.base.FormPanel, {
                 }
             ]
         };
+    },
+    
+    loadFormAfterRender: function() {
+        
+        Ext.getCmp('ignore-me').modelStore.on('onload', function() { 
+            this.getForm().loadRecord(this.record); 
+        }, this);                
+        
     }
     
 });
