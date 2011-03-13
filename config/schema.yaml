@@ -200,7 +200,8 @@
 
 database:
     _properties:        
-        uri:                    'sqlite:db'
+        uri:                    'sqlite:gscnt_db'
+        
     tables:
         user_profile:
             id:                 ~
@@ -208,7 +209,7 @@ database:
             nia:                { type: integer, required: true }
             comite:             { type: boolean, default: false }
             title:              { type: varchar, size: 128 }
-            validation_key:     { type: varchar }
+            validation_key:     { type: varchar, size: 128 }
             validated:          { type: boolean, default: false }            
             _relation:
                 user:           { type: one2one, foreignTable: goliat_user, foreignKey: id, view: user }
@@ -232,7 +233,7 @@ database:
         users_group:
             id:                 ~
             name:               { type: varchar, size: 128, required: true }
-            description:        { type: varchar }
+            description:        { type: varchar, size: 256 }
             active:             { type: boolean, default: true }
             _relation:
                 user_ids:       { type: many2many, foreignTable: goliat_user, foreignKey: id, localKey: id, keys: [ users_group_id, goliat_user_id ] }
@@ -242,7 +243,7 @@ database:
         seccion:
             id:                 ~
             name:               { type: varchar, size: 256, required: true }
-            description:        { type: varchar }
+            description:        { type: varchar, size: 256 }
             active:             { type: boolean, default: true }
             comite_id:          { type: integer }
             sindicato_id:       { type: integer }
@@ -257,7 +258,7 @@ database:
         sindicato:
             id:                 ~
             name:               { type: varchar, size: 128, required: true }
-            description:        { type: varchar }
+            description:        { type: varchar, size: 256 }
             comite_id:          { type: integer }
             _relation:
                 address:        { type: many2one, localKey: id, foreignTable: address, foreignKey: id }
@@ -268,7 +269,7 @@ database:
         
         federacion:
             id:                 ~
-            name:               { type: varchar, required: true }
+            name:               { type: varchar, size: 128, required: true }
             comite_id:          { type: integer }                                     
             _relation:
                 address:        { type: many2one, localKey: id, foreignTable: address, foreignKey: id }
@@ -278,7 +279,7 @@ database:
         
         cargo:
             id:                 ~
-            name:               { type: varchar, required: true }
+            name:               { type: varchar, size: 128, required: true }
             _order:
                 fieldsOrder:    [ id, name ]
                

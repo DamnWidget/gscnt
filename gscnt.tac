@@ -100,7 +100,6 @@ sslauthserver=internet.SSLServer(8443, goliat_app_site, sslAuthFactory)
 sslauthserver.setName('GsCNT SSL Client Authentication')
 sslauthserver.setServiceParent(application)
 
-# Para el puto Chromium
 httpserver2=internet.TCPServer(4080, goliat_app_site)
 httpserver2.setName('GsCNT Application Chrome')
 httpserver2.setServiceParent(application)

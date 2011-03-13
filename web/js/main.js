@@ -73,22 +73,11 @@ GsCNT.workspace = function() {
                 region          : 'center',                
                 items           : [
                     { 
-                        xtype       : 'escritorio',
+                        xtype       : 'escritorio',                        
                         pLayout     : {                            
                             columns     : [
-                                {
-                                    columnWidth : .30,
-                                    items       : [
-                                        { title: 'Another Panel 1', tools: GsCNT.view.Portlet.Tools, html: 'Perico palotes' }
-                                    ],                                    
-                                },
-                                {
-                                    columnWidth : .70,
-                                    items       : [
-                                        { title: 'Panel 2', tools: GsCNT.view.Portlet.Tools, html: 'Perico palotes' },
-                                        { title: 'Another Panel 2', tools: GsCNT.view.Portlet.Tools, html: 'Perico palotes' }   
-                                    ]
-                                }
+                                { columnWidth : .30 },
+                                { columnWidth : .70 }
                             ]                                                    
                         }                        
                     },
@@ -162,6 +151,7 @@ GsCNT.workspace = function() {
             topPanel = this.window.getComponent('topPanel');
             topPanel.height = 100;
             header = { xtype : 'gscnt_header_panel' };
+            console.debug(header);
             topPanel.add(header);
             topPanel.doLayout();
         },

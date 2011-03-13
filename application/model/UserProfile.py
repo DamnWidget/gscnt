@@ -30,9 +30,10 @@ Created on 2010-10-17 23:13:40.502370
 @version: 0.1
 '''
 from zope.interface import implements
+from twisted.internet import defer
 from storm.variables import *
+from storm.references import ReferenceSet
 from goliat.session.user import IUserProfile
-from goliat.database.reference import ReferenceSet
 from application.model.base.UserProfileBase import UserProfileBase
 from application.model.Sindicato import Sindicato
 
@@ -52,19 +53,10 @@ class UserProfile(UserProfileBase):
     def get_list():
         """Return a list of profile + user data."""
 
-        def cb_find(result):
-            return result.all().addCallback(cb_all)
+        users=list()
+        for res in UserProfile.store.find(UserProfile, UserProfile.comite==False):
+            users.append({
+                'id' : res.id, 'user_id' : res.user.id, 'name' : res.user.username, 'nia' : res.nia
+            })
 
-        def cb_all(results):
-            users=list()
-            for res in results:
-                users.append(res.user.addCallback(cb_prepare, res))
-
-            return users
-
-        def cb_prepare(user, profile):
-            puser={'id' : profile.id, 'user_id' : user.id, 'name' : user.username, 'nia' : profile.nia}
-
-            return puser
-
-        return UserProfile.store.find(UserProfile, UserProfile.comite==False).addCallback(cb_find)
+        return defer.succeed(users)

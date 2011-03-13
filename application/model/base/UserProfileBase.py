@@ -18,7 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 ##
 # $id application/model/base/UserProfileBase.py created on 2010-10-17 16:09:25.092322 by Goliat $
-from csvn.core.functions import DIR
 '''
 Created on 2010-10-17 16:09:25.092322
 
@@ -34,9 +33,9 @@ import json
 from storm.base import Storm
 from storm.locals import *
 from storm import Undef
+from storm.store import Store
+from storm.references import Reference, ReferenceSet
 
-from goliat.database.store import Store
-from goliat.database.reference import Reference, ReferenceSet
 from goliat.database import Database
 from goliat.database.model import Model
 from twisted.internet import defer

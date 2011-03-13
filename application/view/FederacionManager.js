@@ -1,8 +1,8 @@
 /*
         
     GsCNT : Gestion de Sindicatos de la CNT. 
-    Copyright (C) 2010 Open Phoenix IT S.Coop.And. 
-    Copyright (C) 2010 Confederación Nacional del Trabajo.    
+    Copyright (C) 2010 - 2011 Open Phoenix IT S.Coop.And. 
+    Copyright (C) 2010 - 2011 Confederación Nacional del Trabajo.    
           
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License

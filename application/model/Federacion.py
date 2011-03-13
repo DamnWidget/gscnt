@@ -50,26 +50,20 @@ class Federacion(FederacionBase):
 
         from application.model.UsersGroup import UsersGroup
 
-        def cb_sendback(ign):
-            return {'success' : True}
-
-        def cb_create_federacion(ign, ugroup):
-            federacion=Federacion()
-            federacion.name=unicode(data.get('name')[0].decode('utf8'))
-            federacion.comite_id=ugroup.id
-
-            d=federacion.store.add(federacion)
-            d.addCallback(lambda ign: federacion.store.commit()).addCallback(cb_sendback)
-
         ugroup=UsersGroup()
         ugroup.name=unicode(data.get('group_name')[0].decode('utf8'))
         ugroup.description=unicode(data.get('group_desc')[0].decode('utf8'))
         ugroup.active=True
 
-        d=Federacion.store.add(ugroup)
-        d.addCallback(lambda ign: Federacion.store.commit()).addCallback(cb_create_federacion, ugroup)
+        Federacion.store.add(ugroup)
+        Federacion.store.commit()
 
-        return d
+        federacion=Federacion()
+        federacion.name=unicode(data.get('name')[0].decode('utf8'))
+        federacion.comite_id=ugroup.id
+        federacion.store.add(federacion)
+        federacion.store.commit()
+        return defer.succeed({'success' : True})
 
     @staticmethod
     def update(data):
@@ -99,7 +93,7 @@ class Federacion(FederacionBase):
         def retrieve_comite(fl):
             if type(fl) is dict:
                 return fl
-            return fl.comite.addCallback(cb_get_comite)
+            return defer.succeed(fl.comite).addCallback(cb_get_comite)
 
         def cb_get_comite(comite):
             if not comite:
@@ -139,16 +133,12 @@ class Federacion(FederacionBase):
         def cb_get_user(comite):
             if type(comite) is dict:
                 return comite
-            return Federacion.store.get(UserData, user_id).addCallback(cb_add, comite)
 
-        def cb_add(user, comite):
-            return comite.user_ids.add(user).addCallback(cb_get_profile, user)
-
-        def cb_get_profile(ign, user):
-            return Federacion.store.get(UserProfile, user.id).addCallback(cb_set_title)
-
-        def cb_set_title(user_profile):
-            user_profile.title=unicode(kwargs.get('cargo_name')[0].decode('utf8'))
+            user=Federacion.store.get(UserData, user_id)
+            comite.user_ids.add(user)
+            print dir(user)
+            profile=Federacion.store.get(UserProfile, user.id)
+            profile.title=unicode(kwargs.get('cargo_name')[0].decode('utf8'))
             Federacion.store.commit()
 
             return {'success' : True}
@@ -197,27 +187,28 @@ class Federacion(FederacionBase):
         def cb_get_members(comite):
             if type(comite) is dict:
                 return comite
-            return comite.user_ids.all().addCallback(cb_parse)
+
+            return cb_parse(comite.user_ids)
 
         def cb_parse(users):
-            if len(users) is 0:
+            if users.count() is 0:
                 return {'success' : True, 'people' : [] }
             rusers=list()
             for user in users:
-                rusers.append(Federacion.store.get(UserProfile, user.id).addCallback(cb_prepare, user))
+                profile=Federacion.store.get(UserProfile, user.id)
+                sindicato_name=''
+                for sindicato in profile.sindicato:
+                    sindicato_name=sindicato.name
+
+                rusers.append({
+                    'id' : user.id,
+                    'profile_id' : profile.id,
+                    'name' : user.username,
+                    'nia' : profile.nia,
+                    'title' : profile.title,
+                    'sindicato_name' : sindicato_name
+                })
 
             return rusers
-
-        def cb_prepare(profile, user):
-            puser={'id' : user.id, 'profile_id' : profile.id, 'name' : user.username, 'nia' : profile.nia, 'title' : profile.title}
-
-            return profile.sindicato.all().addCallback(cb_prepare_sindicato, puser)
-
-        def cb_prepare_sindicato(sindicato, puser):
-            if len(sindicato) is 0:
-                return puser
-            puser['sindicato_name']=sindicato[0].name
-
-            return puser
 
         return Federacion.get_comite().addCallback(cb_get_members)

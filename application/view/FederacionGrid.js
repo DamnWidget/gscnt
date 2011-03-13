@@ -99,6 +99,7 @@ GsCNT.view.FederacionGrid = Ext.extend(Ext.grid.GridPanel, {
     },
     
     onException : function(proxy, type, action, options, response, args) {
+        console.debug(response);
         Goliat.Msg.alert(response.raw.message, this);       
     }
 });

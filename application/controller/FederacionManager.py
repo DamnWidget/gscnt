@@ -82,10 +82,10 @@ class FederacionManager(gresource.GResource):
             data['group']={ 'name' : group.name, 'id' : group.id, 'desc' : group.description, 'active' : group.active }
             self.sendback(request, data)
 
-        if len(result) is 0:
+        if len(result['data']) is 0:
             self.sendback(request, {'success' : False, 'message' : 'No hay datos de la Federación Local'})
         else:
-            UsersGroup.store.get(UsersGroup, result['data'][0]['comite_id']).addCallback(cb_read_group, result['data'][0])
+            defer.succeed(UsersGroup.store.get(UsersGroup, result['data'][0]['comite_id'])).addCallback(cb_read_group, result['data'][0])
 
     def save(self, request, **kwargs):
         """Save federacion data."""
@@ -134,14 +134,11 @@ class FederacionManager(gresource.GResource):
             if type(results) is dict:
                 self.sendback(request, results)
             else:
-                dl=defer.DeferredList(results).addCallback(cb_sendback)
+                people=list()
+                for user in results:
+                    people.append(user)
 
-        def cb_sendback(results):
-            people=list()
-            for user in results:
-                people.append(user[1])
-
-            self.sendback(request, {'success' : True, 'people' : people})
+                self.sendback(request, {'success' : True, 'people' : people})
 
         Federacion.get_comite_members().addCallback(cb_get_data)
 

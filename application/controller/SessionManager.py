@@ -81,18 +81,16 @@ class SessionManager(gresource.GResource):
             self.senderrback(
                 request,
                 {'message' : 'Lo sentimos pero parece ser que su usuario aún no ha sido validado.<br />'+\
-                'Revise la dirección de correo que facilitó cuando se registró en la aplicación.<br />'+\
-                'Si no puedes solucionar el problema por tus propios medios ponte en contacto con'+\
-                ' la secretaría de Organización de tu sindicato.', 'number' : http.SESSION_NOT_VALID })
+                'Ponte en contacto con la secretaría de Organización de tu sindicato.',
+                'number' : http.SESSION_NOT_VALID })
             session.expire()
             return
         if not user.is_active():
             self.senderrback(
                 request,
                 {'message' : 'Lo sentimos pero parece ser que su usuario aún no ha sido activado.<br />'+\
-                'Revise la dirección de correo que facilitó cuando se registró en la aplicación.<br />'+\
-                'Si no puedes solucionar el problema por tus propios medios ponte en contacto con'+\
-                ' la secretaría de Organización de tu sindicato.', 'number' : http.SESSION_NOT_ACTIVE })
+                'Ponte en contacto con la secretaría de Organización de tu sindicato.',
+                'number' : http.SESSION_NOT_ACTIVE })
             session.expire()
             return
         sess_data=user.__rpr__()

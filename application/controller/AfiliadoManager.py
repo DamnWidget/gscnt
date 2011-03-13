@@ -63,16 +63,9 @@ class AfiliadoManager(gresource.GResource):
         """Performs read CRUD action."""
 
         def cb_sendback(results):
-            users=[]
-            for user in results:
-                users.append(user[1])
+            self.sendback(request, {'success' : True, 'data' : results})
 
-            self.sendback(request, {'success' : True, 'data' : users})
-
-        def cb_get_data(results):
-            dl=defer.DeferredList(results).addCallback(cb_sendback)
-
-        UserProfile.get_list().addCallback(cb_get_data)
+        UserProfile.get_list().addCallback(cb_sendback)
 
         return server.NOT_DONE_YET
 
